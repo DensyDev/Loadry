@@ -1,0 +1,57 @@
+{
+  "app": {
+    "projectTitle": "Загрузки {{project}}",
+    "title": "Загрузки"
+  },
+  "header": {
+    "theme": "Тема",
+    "language": "Язык",
+    "title": "Загрузки"
+  },
+  "common": {
+    "copyLink": "Скопировать ссылку",
+    "copied": "Ссылка скопирована",
+    "download": "Скачать",
+    "refresh": "Обновить",
+    "resetFilters": "Сбросить фильтры",
+    "retry": "Повторить",
+    "downloadChecksum": "Скачать checksum",
+    "copyDirectLink": "Скопировать direct link",
+    "copyDownloadLink": "Скопировать download link"
+  },
+  "branches": {
+    "dev": "Dev",
+    "stable": "Stable",
+    "legacy": "Legacy"
+  },
+  "filters": {
+    "allBranches": "Все ветки",
+    "allVersions": "Все версии",
+    "branch": "Ветка",
+    "version": "Версия"
+  },
+  "projects": {
+    "loading": "Загрузка проектов",
+    "select": "Выбрать проект"
+  },
+  "theme": {
+    "dark": "Тёмная",
+    "light": "Светлая",
+    "system": "Системная"
+  },
+  "home": {
+    "buildsCount": "{{count}} сборок",
+    "empty": "По выбранным фильтрам версий нет.",
+    "file": "Файл",
+    "loading": "Загружаю версии из настроенных провайдеров.",
+    "provider": "Провайдер",
+    "subtitle": "Одностраничный список загрузок с конфигурируемыми провайдерами версий.",
+    "tableTitle": "Доступные версии",
+    "version": "Версия",
+    "source": "Source"
+  },
+  "errors": {
+    "loadProjects": "Не удалось загрузить проекты",
+    "loadVersions": "Не удалось загрузить версии"
+  }
+}

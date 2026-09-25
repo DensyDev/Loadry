@@ -1,53 +1,88 @@
-# Deployment
+# Loadry deployment
 
-Projects are configured in `src/config/projectFactory.ts`. Each project defines:
+Loadry is structured as a monorepo but deployed as one application by default.
 
-- A unique `id`
-- A display `name` and `description`
-- An ordered list of forwarding `domains`
-- Its own list of version `providers`
+## Workspaces
 
-When the same domain is used by multiple projects, the first matching project wins.
+- `apps/frontend` — Vite static application
+- `apps/backend` — platform-neutral Express application
+- `packages/contracts` — public DTOs and runtime schemas
+- `packages/sdk` — API client used by the frontend and external consumers
+- `api/server.ts` — Vercel-specific adapter
 
-Frontend routes:
+The frontend does not import providers or backend configuration. It loads projects and versions
+through `@densy/loadry-sdk/v1`.
+
+## Projects and providers
+
+Projects are configured in `apps/backend/src/project.factory.ts`. Each project defines:
+
+- a unique ID;
+- a display name and description;
+- ordered forwarding domains;
+- version provider instances.
+
+If the same domain is assigned more than once, the first matching project wins. Lumi remains the
+default example project and uses Reposilite release, snapshot, and legacy providers.
+
+## Routes
+
+Frontend:
 
 - `/project/:projectId`
-- `/p/:projectId` — alias that redirects to the canonical route
+- `/p/:projectId`
 
-Project-scoped download routes:
+API:
+
+- `/api/v1/*`
+
+Downloads:
 
 - `/download/:projectId/:branch/latest`
 - `/download/:projectId/:branch/:fileName`
-
-Legacy routes without a project ID resolve against the first configured project:
-
 - `/download/:branch/latest`
 - `/download/:branch/:fileName`
 
-The HTTP server is implemented as a platform-neutral Express application:
+## Local development
 
-- Express application: `src/server/app.ts`
-- Download router: `src/server/download/download.router.ts`
-- Download resolver: `src/server/download/download.service.ts`
-- Vite dev/preview adapter: `src/server/expressMiddleware.ts`
-- Vercel adapter: `api/server.ts`
+```bash
+npm install
+npm run dev
+```
 
-Any Node hosting platform that supports Express can mount `createServerApp()`. Vite uses streaming
-downloads, while the Vercel adapter redirects to the provider file to avoid buffering large files
-inside a serverless function.
+`apps/frontend/vite.config.ts` mounts the Express application as Vite middleware, so local routes
+behave like production without a separate backend process.
 
-For Vercel, `vercel.json` rewrites API and download routes to the same Express Function adapter.
-This is only the Vercel deployment adapter, not the core implementation.
+An external frontend can set `VITE_LOADRY_API_URL`. The default is the current origin.
 
-The public API follows the same adapter model:
+## Vercel
 
-- Versioned API router: `src/server/api/v1/router.ts`
-- Resource routes: `src/server/api/v1/routes`
-- Query validation: `src/server/api/v1/validation.ts`
-- Response serializers: `src/server/api/v1/serializers.ts`
-- Shared Express application: `src/server/app.ts`
-- Vercel adapter: `api/server.ts`
-- Public routes: `/api/v1/*`
+The repository is one Vercel Project:
 
-See `API.md` for endpoints, filters, and response formats. Additional incompatible versions can
-be implemented in a separate `src/server/api/v2` module without changing v1.
+```text
+/                 -> apps/frontend/dist
+/api/*            -> Express Vercel Function
+/download/*       -> Express Vercel Function
+```
+
+`vercel.json` builds all workspaces and publishes `apps/frontend/dist`. API and download rewrites
+target the thin `api/server.ts` adapter, which imports the shared Express application from
+`apps/backend`.
+
+The Vercel adapter uses redirect delivery for large provider files. Vite and other Node hosts use
+stream delivery. Provider files are never fully buffered before being sent to the client.
+
+## Other Node hosts
+
+`createServerApp()` is exported from `@densy/loadry-backend`. A Node, container, or serverless
+adapter can mount it without depending on Vercel:
+
+```ts
+import { createServerApp } from "@densy/loadry-backend";
+
+const app = createServerApp(process.env);
+app.listen(3000);
+```
+
+Public read-only CORS headers are applied to `/api` and `/download`, allowing the SDK to be used
+from browser applications hosted on other domains.

@@ -1,0 +1,57 @@
+{
+  "app": {
+    "projectTitle": "{{project}} Downloads",
+    "title": "Downloads"
+  },
+  "header": {
+    "language": "Language",
+    "theme": "Theme",
+    "title": "Downloads"
+  },
+  "common": {
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "download": "Download",
+    "refresh": "Refresh",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "downloadChecksum": "Download checksum",
+    "copyDirectLink": "Copy direct link",
+    "copyDownloadLink": "Copy download link"
+  },
+  "branches": {
+    "dev": "Dev",
+    "stable": "Stable",
+    "legacy": "Legacy"
+  },
+  "filters": {
+    "allBranches": "All branches",
+    "allVersions": "All versions",
+    "branch": "Branch",
+    "version": "Version"
+  },
+  "projects": {
+    "loading": "Loading projects",
+    "select": "Select project"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System"
+  },
+  "home": {
+    "buildsCount": "{{count}} builds",
+    "empty": "No versions match the selected filters.",
+    "file": "File",
+    "loading": "Loading versions from configured providers.",
+    "provider": "Provider",
+    "subtitle": "Single-page download list with configurable version providers.",
+    "tableTitle": "Available versions",
+    "version": "Version",
+    "source": "Source"
+  },
+  "errors": {
+    "loadProjects": "Failed to load projects",
+    "loadVersions": "Failed to load versions"
+  }
+}

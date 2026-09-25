@@ -1,0 +1,57 @@
+{
+  "app": {
+    "projectTitle": "{{project}} のダウンロード",
+    "title": "ダウンロード"
+  },
+  "header": {
+    "theme": "テーマ",
+    "language": "言語",
+    "title": "ダウンロード"
+  },
+  "common": {
+    "copyLink": "リンクをコピー",
+    "copied": "リンクをコピーしました",
+    "download": "ダウンロード",
+    "refresh": "更新",
+    "resetFilters": "フィルターをリセット",
+    "retry": "再試行",
+    "downloadChecksum": "チェックサムをダウンロード",
+    "copyDirectLink": "直接リンクをコピー",
+    "copyDownloadLink": "ダウンロードリンクをコピー"
+  },
+  "branches": {
+    "dev": "開発版",
+    "stable": "安定版",
+    "legacy": "旧版"
+  },
+  "filters": {
+    "allBranches": "すべてのブランチ",
+    "allVersions": "すべてのバージョン",
+    "branch": "ブランチ",
+    "version": "バージョン"
+  },
+  "projects": {
+    "loading": "プロジェクトを読み込んでいます",
+    "select": "プロジェクトを選択"
+  },
+  "theme": {
+    "dark": "ダーク",
+    "light": "ライト",
+    "system": "システム"
+  },
+  "home": {
+    "buildsCount": "{{count}} ビルド",
+    "empty": "選択したフィルターに一致するバージョンはありません。",
+    "file": "ファイル",
+    "loading": "設定済みのプロバイダーからバージョンを読み込んでいます。",
+    "provider": "プロバイダー",
+    "subtitle": "設定可能なバージョンプロバイダーを備えた単一ページのダウンロード一覧です。",
+    "tableTitle": "利用可能なバージョン",
+    "version": "バージョン",
+    "source": "ソース"
+  },
+  "errors": {
+    "loadProjects": "プロジェクトを読み込めませんでした",
+    "loadVersions": "バージョンを読み込めませんでした"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "app": {
+    "projectTitle": "Descargas de {{project}}",
+    "title": "Descargas"
+  },
+  "header": {
+    "theme": "Tema",
+    "language": "Idioma",
+    "title": "Descargas"
+  },
+  "common": {
+    "copyLink": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "download": "Descargar",
+    "refresh": "Actualizar",
+    "resetFilters": "Restablecer filtros",
+    "retry": "Reintentar",
+    "downloadChecksum": "Descargar suma de comprobación",
+    "copyDirectLink": "Copiar enlace directo",
+    "copyDownloadLink": "Copiar enlace de descarga"
+  },
+  "branches": {
+    "dev": "Desarrollo",
+    "stable": "Estable",
+    "legacy": "Antigua"
+  },
+  "filters": {
+    "allBranches": "Todas las ramas",
+    "allVersions": "Todas las versiones",
+    "branch": "Rama",
+    "version": "Versión"
+  },
+  "projects": {
+    "loading": "Cargando proyectos",
+    "select": "Seleccionar proyecto"
+  },
+  "theme": {
+    "dark": "Oscuro",
+    "light": "Claro",
+    "system": "Sistema"
+  },
+  "home": {
+    "buildsCount": "{{count}} compilaciones",
+    "empty": "Ninguna versión coincide con los filtros seleccionados.",
+    "file": "Archivo",
+    "loading": "Cargando versiones desde los proveedores configurados.",
+    "provider": "Proveedor",
+    "subtitle": "Lista de descargas de una sola página con proveedores de versiones configurables.",
+    "tableTitle": "Versiones disponibles",
+    "version": "Versión",
+    "source": "Fuente"
+  },
+  "errors": {
+    "loadProjects": "No se pudieron cargar los proyectos",
+    "loadVersions": "No se pudieron cargar las versiones"
+  }
+}

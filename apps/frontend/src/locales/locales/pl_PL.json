@@ -1,0 +1,57 @@
+{
+  "app": {
+    "projectTitle": "Pliki do pobrania — {{project}}",
+    "title": "Pliki do pobrania"
+  },
+  "header": {
+    "theme": "Motyw",
+    "language": "Język",
+    "title": "Pliki do pobrania"
+  },
+  "common": {
+    "copyLink": "Kopiuj link",
+    "copied": "Link skopiowany",
+    "download": "Pobierz",
+    "refresh": "Odśwież",
+    "resetFilters": "Resetuj filtry",
+    "retry": "Spróbuj ponownie",
+    "downloadChecksum": "Pobierz sumę kontrolną",
+    "copyDirectLink": "Kopiuj bezpośredni link",
+    "copyDownloadLink": "Kopiuj link do pobierania"
+  },
+  "branches": {
+    "dev": "Deweloperska",
+    "stable": "Stabilna",
+    "legacy": "Starsza"
+  },
+  "filters": {
+    "allBranches": "Wszystkie gałęzie",
+    "allVersions": "Wszystkie wersje",
+    "branch": "Gałąź",
+    "version": "Wersja"
+  },
+  "projects": {
+    "loading": "Ładowanie projektów",
+    "select": "Wybierz projekt"
+  },
+  "theme": {
+    "dark": "Ciemny",
+    "light": "Jasny",
+    "system": "Systemowy"
+  },
+  "home": {
+    "buildsCount": "Liczba kompilacji: {{count}}",
+    "empty": "Brak wersji pasujących do wybranych filtrów.",
+    "file": "Plik",
+    "loading": "Ładowanie wersji od skonfigurowanych dostawców.",
+    "provider": "Dostawca",
+    "subtitle": "Jednostronicowa lista plików z konfigurowalnymi dostawcami wersji.",
+    "tableTitle": "Dostępne wersje",
+    "version": "Wersja",
+    "source": "Źródło"
+  },
+  "errors": {
+    "loadProjects": "Nie udało się załadować projektów",
+    "loadVersions": "Nie udało się załadować wersji"
+  }
+}
