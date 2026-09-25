@@ -1,25 +1,19 @@
-import { createDownloadProjects } from "../project.factory.js";
-import { ProjectService } from "../project.service.js";
+import type { ProjectCatalog } from "../project.catalog.js";
 import type { VersionEntry } from "../types.js";
 import { VersionService } from "../version.service.js";
 
-type ServerEnvironment = Record<string, string | undefined>;
-
 export class DownloadService {
-  private readonly projectService: ProjectService;
-
-  constructor(env: ServerEnvironment) {
-    this.projectService = new ProjectService(createDownloadProjects(env));
-  }
+  constructor(private readonly projectCatalog: ProjectCatalog) {}
 
   async resolve(
     projectId: string | null,
     branch: string,
     target: string
   ): Promise<VersionEntry | null> {
+    const projectService = await this.projectCatalog.getService();
     const project = projectId
-      ? this.projectService.findById(projectId)
-      : this.projectService.getDefault();
+      ? projectService.findById(projectId)
+      : projectService.getDefault();
 
     if (!project) {
       return null;

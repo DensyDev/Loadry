@@ -32,7 +32,9 @@
   },
   "projects": {
     "loading": "Загрузка проектов",
-    "select": "Выбрать проект"
+    "select": "Выбрать проект",
+    "emptyTitle": "Проекты не настроены",
+    "emptyDescription": "Укажите LOADRY_CONFIG_JSON или LOADRY_CONFIG_URL, чтобы опубликовать первый проект."
   },
   "theme": {
     "dark": "Тёмная",

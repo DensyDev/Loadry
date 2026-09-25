@@ -11,8 +11,8 @@ The repository is an npm workspace monorepo:
 - `packages/sdk` — framework-independent JavaScript SDK
 - `api` — thin Vercel adapter for the shared Express application
 
-Lumi is the first configured project and uses the Reposilite provider. Additional projects and
-providers can be added without changing the frontend.
+Projects are loaded at runtime from JSON configuration. The repository can be deployed unchanged,
+then configured through environment variables without maintaining a fork.
 
 ## Development
 
@@ -22,6 +22,15 @@ npm run dev
 ```
 
 The Vite development server mounts the same Express application used in production.
+
+Copy `loadry.config.example.json` to a compact JSON string and set it as
+`LOADRY_CONFIG_JSON`, or publish the document at an HTTP endpoint and set
+`LOADRY_CONFIG_URL`. Inline configuration takes precedence. A remote endpoint can optionally use
+the bearer token from `LOADRY_CONFIG_TOKEN` and is refreshed every
+`LOADRY_CONFIG_CACHE_TTL_SECONDS` seconds.
+
+With neither setting present, Loadry starts normally with an empty project catalog and shows setup
+instructions instead of serving a built-in project.
 
 ## Validation
 

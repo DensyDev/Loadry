@@ -15,15 +15,21 @@ through `@densy/loadry-sdk/v1`.
 
 ## Projects and providers
 
-Projects are configured in `apps/backend/src/project.factory.ts`. Each project defines:
+Projects are configured at runtime with `LOADRY_CONFIG_JSON` or `LOADRY_CONFIG_URL`. The JSON shape
+is documented by `loadry.config.example.json`. Each project defines:
 
 - a unique ID;
 - a display name and description;
 - ordered forwarding domains;
 - version provider instances.
 
-If the same domain is assigned more than once, the first matching project wins. Lumi remains the
-default example project and uses Reposilite release, snapshot, and legacy providers.
+If the same domain is assigned more than once, the first matching project wins. The repository has
+no built-in project, so a stock deployment starts with an empty catalog. The example configuration
+shows Lumi using Reposilite release, snapshot, and legacy providers.
+
+Inline JSON takes precedence over the remote URL. Remote configuration is cached for 60 seconds by
+default and may be protected with the bearer token in `LOADRY_CONFIG_TOKEN`. Change the refresh
+interval with `LOADRY_CONFIG_CACHE_TTL_SECONDS`.
 
 ## Routes
 

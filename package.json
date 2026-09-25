@@ -11,7 +11,7 @@
     "build": "npm run build --workspace @densy/loadry-contracts && npm run build --workspace @densy/loadry-sdk && npm run typecheck --workspace @densy/loadry-backend && npm run build --workspace @densy/loadry-frontend",
     "dev": "npm run dev --workspace @densy/loadry-frontend",
     "preview": "npm run preview --workspace @densy/loadry-frontend",
-    "test": "npm run test --workspace @densy/loadry-sdk",
+    "test": "npm run test --workspace @densy/loadry-backend && npm run test --workspace @densy/loadry-sdk",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "repository": {

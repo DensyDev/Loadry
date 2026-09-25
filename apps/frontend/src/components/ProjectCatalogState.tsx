@@ -1,5 +1,5 @@
 import { Button, Spinner, Typography } from "@heroui/react";
-import { RefreshCcw, ServerCrash } from "lucide-react";
+import { FolderCog, RefreshCcw, ServerCrash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 type ProjectCatalogStateProps = {
@@ -24,7 +24,20 @@ export function ProjectCatalogState({
   }
 
   if (!error) {
-    return null;
+    return (
+      <div className="flex min-h-60 flex-col items-center justify-center gap-3 px-4 text-center">
+        <FolderCog aria-hidden="true" className="text-muted" size={36} />
+        <Typography.Heading level={3}>
+          {t("projects.emptyTitle", { defaultValue: "No projects configured" })}
+        </Typography.Heading>
+        <Typography.Paragraph className="max-w-2xl text-muted">
+          {t("projects.emptyDescription", {
+            defaultValue:
+              "Set LOADRY_CONFIG_JSON or LOADRY_CONFIG_URL to publish your first project.",
+          })}
+        </Typography.Paragraph>
+      </div>
+    );
   }
 
   return (

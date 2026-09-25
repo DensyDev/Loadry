@@ -32,7 +32,9 @@
   },
   "projects": {
     "loading": "Projeler yükleniyor",
-    "select": "Proje seç"
+    "select": "Proje seç",
+    "emptyTitle": "Yapılandırılmış proje yok",
+    "emptyDescription": "İlk projenizi yayınlamak için LOADRY_CONFIG_JSON veya LOADRY_CONFIG_URL değerini ayarlayın."
   },
   "theme": {
     "dark": "Koyu",

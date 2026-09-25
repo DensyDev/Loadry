@@ -15,7 +15,7 @@ export function DefaultProjectRedirect() {
   const project = forwardedProject ?? projectService.getDefault();
 
   if (!project) {
-    return null;
+    return <ProjectCatalogState error={null} isLoading={false} onRetry={reload} />;
   }
 
   return (
@@ -42,7 +42,7 @@ export function ProjectAliasRedirect() {
   const project = requestedProject ?? projectService.getDefault();
 
   if (!project) {
-    return null;
+    return <ProjectCatalogState error={null} isLoading={false} onRetry={reload} />;
   }
 
   return (

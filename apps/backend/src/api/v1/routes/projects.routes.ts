@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { createDownloadProjects } from "../../../project.factory.js";
-import { ProjectService } from "../../../project.service.js";
+import type { ProjectCatalog } from "../../../project.catalog.js";
 import { VersionService } from "../../../version.service.js";
 import {
   asyncHandler,
@@ -10,25 +9,24 @@ import {
 import { serializeProject, serializeVersion } from "../serializers.js";
 import { versionLookupQuerySchema, versionsQuerySchema } from "../validation.js";
 
-type ServerEnvironment = Record<string, string | undefined>;
-
 function requestOrigin(protocol: string, host: string | undefined) {
   return `${protocol}://${host ?? "localhost"}`;
 }
 
-export function createProjectsRouter(env: ServerEnvironment) {
+export function createProjectsRouter(projectCatalog: ProjectCatalog) {
   const projectsRouter = Router();
-  const projectService = new ProjectService(createDownloadProjects(env));
 
-  projectsRouter.get("/", (request, response) => {
+  projectsRouter.get("/", asyncHandler(async (request, response) => {
+    const projectService = await projectCatalog.getService();
     const origin = requestOrigin(request.protocol, request.get("host"));
-    response.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    response.setHeader("Cache-Control", "no-store");
     response.json(projectService.projects.map(project => serializeProject(project, origin)));
-  });
+  }));
 
   projectsRouter.get(
     "/:projectId/versions/lookup",
     asyncHandler(async (request, response) => {
+      const projectService = await projectCatalog.getService();
       const project = projectService.findById(routeParam(request.params.projectId));
 
       if (!project) {
@@ -81,6 +79,7 @@ export function createProjectsRouter(env: ServerEnvironment) {
   projectsRouter.get(
     "/:projectId/versions",
     asyncHandler(async (request, response) => {
+      const projectService = await projectCatalog.getService();
       const projectId = routeParam(request.params.projectId);
       const project = projectService.findById(projectId);
 
@@ -98,7 +97,8 @@ export function createProjectsRouter(env: ServerEnvironment) {
     })
   );
 
-  projectsRouter.get("/:projectId", (request, response) => {
+  projectsRouter.get("/:projectId", asyncHandler(async (request, response) => {
+    const projectService = await projectCatalog.getService();
     const project = projectService.findById(routeParam(request.params.projectId));
 
     if (!project) {
@@ -107,9 +107,9 @@ export function createProjectsRouter(env: ServerEnvironment) {
     }
 
     const origin = requestOrigin(request.protocol, request.get("host"));
-    response.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    response.setHeader("Cache-Control", "no-store");
     response.json(serializeProject(project, origin));
-  });
+  }));
 
   return projectsRouter;
 }

@@ -44,10 +44,12 @@ function projectFixture() {
 
 test("projects.list returns validated projects", async () => {
   const requests = [];
+  let requestCache;
   const client = new DownloadsClient({
     baseUrl: "https://downloads.example.com",
-    fetch: async input => {
+    fetch: async (input, init) => {
       requests.push(String(input));
+      requestCache = init?.cache;
       return jsonResponse([projectFixture()]);
     },
   });
@@ -56,6 +58,7 @@ test("projects.list returns validated projects", async () => {
 
   assert.equal(projects[0].id, "example");
   assert.deepEqual(requests, ["https://downloads.example.com/api/v1/projects"]);
+  assert.equal(requestCache, "no-store");
 });
 
 test("client invokes fetch with the global receiver", async () => {

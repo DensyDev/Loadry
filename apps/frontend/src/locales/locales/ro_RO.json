@@ -32,7 +32,9 @@
   },
   "projects": {
     "loading": "Se încarcă proiectele",
-    "select": "Selectează proiectul"
+    "select": "Selectează proiectul",
+    "emptyTitle": "Niciun proiect configurat",
+    "emptyDescription": "Setează LOADRY_CONFIG_JSON sau LOADRY_CONFIG_URL pentru a publica primul proiect."
   },
   "theme": {
     "dark": "Întunecată",

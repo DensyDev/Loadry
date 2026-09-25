@@ -32,7 +32,9 @@
   },
   "projects": {
     "loading": "Ładowanie projektów",
-    "select": "Wybierz projekt"
+    "select": "Wybierz projekt",
+    "emptyTitle": "Nie skonfigurowano projektów",
+    "emptyDescription": "Ustaw LOADRY_CONFIG_JSON lub LOADRY_CONFIG_URL, aby opublikować pierwszy projekt."
   },
   "theme": {
     "dark": "Ciemny",

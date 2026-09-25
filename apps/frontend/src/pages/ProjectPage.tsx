@@ -22,7 +22,11 @@ export function ProjectPage() {
   }
 
   if (!project) {
-    return defaultProject ? <Navigate replace to={createProjectPath(defaultProject.id)} /> : null;
+    return defaultProject ? (
+      <Navigate replace to={createProjectPath(defaultProject.id)} />
+    ) : (
+      <ProjectCatalogState error={null} isLoading={false} onRetry={reload} />
+    );
   }
 
   return <HomePage project={project} />;

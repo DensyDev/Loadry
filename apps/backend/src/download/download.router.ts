@@ -1,10 +1,9 @@
 import { Router, type Request, type Response } from "express";
 import type { VersionEntry } from "../types.js";
+import type { ProjectCatalog } from "../project.catalog.js";
 import { DownloadService } from "./download.service.js";
 
 type DownloadDeliveryMode = "redirect" | "stream";
-type ServerEnvironment = Record<string, string | undefined>;
-
 type DownloadRouterOptions = {
   deliveryMode: DownloadDeliveryMode;
 };
@@ -69,11 +68,11 @@ async function streamFile(request: Request, response: Response, entry: VersionEn
 }
 
 export function createDownloadRouter(
-  env: ServerEnvironment,
+  projectCatalog: ProjectCatalog,
   options: DownloadRouterOptions
 ) {
   const router = Router();
-  const downloadService = new DownloadService(env);
+  const downloadService = new DownloadService(projectCatalog);
 
   const handleDownload = async (
     request: Request,

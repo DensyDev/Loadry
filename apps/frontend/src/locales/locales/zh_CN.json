@@ -32,7 +32,9 @@
   },
   "projects": {
     "loading": "正在加载项目",
-    "select": "选择项目"
+    "select": "选择项目",
+    "emptyTitle": "未配置项目",
+    "emptyDescription": "设置 LOADRY_CONFIG_JSON 或 LOADRY_CONFIG_URL 以发布第一个项目。"
   },
   "theme": {
     "dark": "深色",

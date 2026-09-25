@@ -6,14 +6,20 @@ export class ProjectsResource {
   constructor(private readonly http: HttpClient) {}
 
   list(options: { signal?: AbortSignal } = {}) {
-    return this.http.get("/api/v1/projects", z.array(projectSchema), options);
+    return this.http.get("/api/v1/projects", z.array(projectSchema), {
+      ...options,
+      cache: "no-store",
+    });
   }
 
   get(projectId: string, options: { signal?: AbortSignal } = {}) {
     return this.http.get(
       `/api/v1/projects/${encodeURIComponent(projectId)}`,
       projectSchema,
-      options
+      {
+        ...options,
+        cache: "no-store",
+      }
     );
   }
 }
