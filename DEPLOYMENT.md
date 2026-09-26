@@ -13,6 +13,10 @@ Loadry is structured as a monorepo but deployed as one application by default.
 The frontend does not import providers or backend configuration. It loads projects and versions
 through `@densy/loadry-sdk/v1`.
 
+Translations are provided by the `apps/frontend/src/locales/data` Git submodule. Initialize it with
+`git submodule update --init --recursive` before local or custom builds. Git-based Vercel builds
+require the submodule repository to be publicly accessible over HTTPS.
+
 ## Projects and providers
 
 Projects are configured at runtime with `LOADRY_CONFIG_JSON` or `LOADRY_CONFIG_URL`. The JSON shape

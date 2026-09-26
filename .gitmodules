@@ -1,0 +1,4 @@
+[submodule "apps/frontend/src/locales/data"]
+	path = apps/frontend/src/locales/data
+	url = https://github.com/DensyDev/Loadry-Languages.git
+	branch = master

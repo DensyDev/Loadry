@@ -6,8 +6,12 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run validate:locales",
+    "predev": "npm run validate:locales",
+    "pretypecheck": "npm run validate:locales",
     "preview": "vite preview --host 127.0.0.1",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:locales": "node scripts/validate-locales.mjs"
   },
   "dependencies": {
     "@densy/loadry-contracts": "*",

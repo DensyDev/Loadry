@@ -17,9 +17,19 @@ then configured through environment variables without maintaining a fork.
 ## Development
 
 ```bash
+git clone --recurse-submodules https://github.com/DensyDev/Loadry.git
 npm install
 npm run dev
 ```
+
+For an existing checkout, initialize the localization submodule with
+`git submodule update --init --recursive`. Translation files and their metadata come from
+[`DensyDev/Loadry-Languages`](https://github.com/DensyDev/Loadry-Languages). The frontend validates
+the catalog and requires every locale to contain the same keys as `en_US.json`.
+
+After publishing translation changes, update the pinned revision with
+`git submodule update --remote apps/frontend/src/locales/data` and commit the changed submodule
+pointer in Loadry.
 
 The Vite development server mounts the same Express application used in production.
 

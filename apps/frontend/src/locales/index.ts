@@ -2,12 +2,10 @@ export {
   defaultLocale,
   localeAliases,
   localeCodes,
+  localeDefinitions,
   localeResources,
   resolveLocale,
   type LocaleCode,
-} from "./helpers";
-export {
-  localeDefinitions,
   type LocaleDefinition,
   type LocaleMessages,
-} from "./locales/definitions";
+} from "./helpers";
