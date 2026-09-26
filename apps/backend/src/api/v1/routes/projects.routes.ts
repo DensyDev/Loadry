@@ -13,7 +13,15 @@ function requestOrigin(protocol: string, host: string | undefined) {
   return `${protocol}://${host ?? "localhost"}`;
 }
 
-export function createProjectsRouter(projectCatalog: ProjectCatalog) {
+type ProjectsRouterOptions = {
+  versionsPageSize: number;
+  versionsPageSizeStep: number;
+};
+
+export function createProjectsRouter(
+  projectCatalog: ProjectCatalog,
+  options: ProjectsRouterOptions
+) {
   const projectsRouter = Router();
 
   projectsRouter.get("/", asyncHandler(async (request, response) => {
@@ -89,10 +97,33 @@ export function createProjectsRouter(projectCatalog: ProjectCatalog) {
       }
 
       const filters = parseQuery(versionsQuerySchema, request.query);
-      const entries = await new VersionService(project.providers).load(filters);
       const origin = requestOrigin(request.protocol, request.get("host"));
 
       response.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+
+      if (filters.page !== undefined) {
+        const pageSize = Math.min(
+          filters.limit ?? options.versionsPageSize,
+          options.versionsPageSize
+        );
+        const result = await new VersionService(project.providers).paginate(
+          filters,
+          filters.page,
+          pageSize
+        );
+        response.json({
+          items: result.items.map(entry => serializeVersion(project, entry, origin)),
+          pagination: {
+            ...result.pagination,
+            maxPageSize: options.versionsPageSize,
+            pageSizeStep: options.versionsPageSizeStep,
+          },
+          series: result.series,
+        });
+        return;
+      }
+
+      const entries = await new VersionService(project.providers).load(filters);
       response.json(entries.map(entry => serializeVersion(project, entry, origin)));
     })
   );

@@ -96,6 +96,42 @@ test("versions.list serializes filters", async () => {
   assert.equal(url.searchParams.get("limit"), "1");
 });
 
+test("versions.page returns pagination metadata", async () => {
+  let requestedUrl = "";
+  const client = new DownloadsClient({
+    baseUrl: "https://downloads.example.com",
+    fetch: async input => {
+      requestedUrl = String(input);
+      return jsonResponse({
+        items: [],
+        pagination: {
+          maxPageSize: 50,
+          page: 2,
+          pageSize: 50,
+          pageSizeStep: 5,
+          totalItems: 75,
+          totalPages: 2,
+        },
+        series: ["1.6", "1.5"],
+      });
+    },
+  });
+
+  const result = await client.versions.page("example", {
+    branches: ["stable"],
+    limit: 25,
+    page: 2,
+    versions: ["1.6"],
+  });
+
+  const url = new URL(requestedUrl);
+  assert.equal(url.searchParams.get("page"), "2");
+  assert.equal(url.searchParams.get("branches"), "stable");
+  assert.equal(url.searchParams.get("versions"), "1.6");
+  assert.equal(url.searchParams.get("limit"), "25");
+  assert.equal(result.pagination.totalItems, 75);
+});
+
 test("versions.lookup preserves property field names", async () => {
   let requestedUrl = "";
   const client = new DownloadsClient({

@@ -2,6 +2,7 @@ import {
   Button,
   CardDescription,
   Chip,
+  Skeleton,
   Table,
   Typography,
 } from "@heroui/react";
@@ -9,7 +10,6 @@ import type { Version } from "@densy/loadry-contracts";
 import { RefreshCcw, ServerCrash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DownloadSplitButton } from "./DownloadSplitButton";
-import { LoadingState } from "./LoadingState";
 
 type VersionsTableProps = {
   entries: Version[];
@@ -25,10 +25,6 @@ export function VersionsTable({
   onRetry,
 }: VersionsTableProps) {
   const { t } = useTranslation();
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
 
   if (error) {
     return (
@@ -46,6 +42,10 @@ export function VersionsTable({
         </Button>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return <VersionsTableSkeleton />;
   }
 
   if (entries.length === 0) {
@@ -113,6 +113,43 @@ export function VersionsTable({
               </Table.Row>
               );
             }}
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
+    </Table>
+  );
+}
+
+const skeletonRows = Array.from({ length: 8 }, (_, index) => ({ id: `skeleton-${index}` }));
+
+function VersionsTableSkeleton() {
+  const { t } = useTranslation();
+
+  return (
+    <Table>
+      <Table.ScrollContainer>
+        <Table.Content
+          aria-busy="true"
+          aria-label={t("home.loading")}
+          className="min-w-[900px]"
+        >
+          <Table.Header>
+            <Table.Column isRowHeader>{t("home.version")}</Table.Column>
+            <Table.Column>{t("home.source")}</Table.Column>
+            <Table.Column>{t("filters.branch")}</Table.Column>
+            <Table.Column>{t("home.file")}</Table.Column>
+            <Table.Column>{t("common.download")}</Table.Column>
+          </Table.Header>
+          <Table.Body items={skeletonRows}>
+            {row => (
+              <Table.Row id={row.id}>
+                <Table.Cell><Skeleton className="h-5 w-24 rounded-md" /></Table.Cell>
+                <Table.Cell><Skeleton className="h-5 w-48 rounded-md" /></Table.Cell>
+                <Table.Cell><Skeleton className="h-6 w-20 rounded-full" /></Table.Cell>
+                <Table.Cell><Skeleton className="h-5 w-64 rounded-md" /></Table.Cell>
+                <Table.Cell><Skeleton className="h-9 w-32 rounded-lg" /></Table.Cell>
+              </Table.Row>
+            )}
           </Table.Body>
         </Table.Content>
       </Table.ScrollContainer>

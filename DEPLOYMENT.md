@@ -31,6 +31,10 @@ Inline JSON takes precedence over the remote URL. Remote configuration is cached
 default and may be protected with the bearer token in `LOADRY_CONFIG_TOKEN`. Change the refresh
 interval with `LOADRY_CONFIG_CACHE_TTL_SECONDS`.
 
+`LOADRY_VERSIONS_PAGE_SIZE` controls how many builds the website requests per page. It defaults to
+`50` and accepts values from `1` to `1000`. `LOADRY_VERSIONS_PAGE_SIZE_STEP` controls the increment
+of the page-size selector, defaults to `5`, and must evenly divide the configured page size.
+
 ## Routes
 
 Frontend:

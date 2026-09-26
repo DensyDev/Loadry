@@ -7,6 +7,10 @@ import express, {
 import { createApiV1Router } from "./api/v1/router.js";
 import { createDownloadRouter } from "./download/download.router.js";
 import { ProjectCatalog } from "./project.catalog.js";
+import {
+  getVersionsPageSize,
+  getVersionsPageSizeStep,
+} from "./server.config.js";
 import { HttpError } from "./shared/http.js";
 
 type ServerEnvironment = Record<string, string | undefined>;
@@ -32,11 +36,18 @@ function publicReadHeaders(request: Request, response: Response, next: NextFunct
 export function createServerApp(env: ServerEnvironment, options: ServerAppOptions = {}) {
   const app = express();
   const projectCatalog = new ProjectCatalog(env);
+  const versionsPageSize = getVersionsPageSize(env);
   app.disable("x-powered-by");
   app.set("trust proxy", true);
 
   app.use("/api", publicReadHeaders);
-  app.use("/api/v1", createApiV1Router(projectCatalog));
+  app.use(
+    "/api/v1",
+    createApiV1Router(projectCatalog, {
+      versionsPageSize,
+      versionsPageSizeStep: getVersionsPageSizeStep(env, versionsPageSize),
+    })
+  );
   app.use("/api", (_request, response) => {
     response.status(404).json({ message: "API endpoint not found" });
   });

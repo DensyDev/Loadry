@@ -71,7 +71,8 @@ GET /api/v1/projects/{projectId}/versions
 | --- | --- |
 | `branches` | Branch IDs separated by commas or passed multiple times |
 | `versions` | Version series separated by commas or passed multiple times |
-| `limit` | Maximum result count from `1` to `1000` |
+| `limit` | Result count from `1` to `1000`; in paginated mode it is capped by the server setting |
+| `page` | Enables paginated output and selects a one-based page number |
 
 Examples:
 
@@ -79,11 +80,19 @@ Examples:
 GET /api/v1/projects/lumi/versions?branches=dev
 GET /api/v1/projects/lumi/versions?branches=stable,dev&versions=1.6,1.5
 GET /api/v1/projects/lumi/versions?branches=dev&versions=1.6&limit=1
+GET /api/v1/projects/lumi/versions?branches=dev&page=2
 ```
 
 Without `branches`, the endpoint returns only entries configured for the all-branches view.
 Passing a branch explicitly also makes hidden branches available. Version responses can include
 provider-specific build metadata in `properties`.
+
+When `page` is present, the response is an object containing `items`, `series`, and pagination
+metadata. `limit` may request a smaller page, while `LOADRY_VERSIONS_PAGE_SIZE` controls both the
+default and maximum page size allowed by the server. Pagination metadata also includes
+`pageSizeStep`, configured through `LOADRY_VERSIONS_PAGE_SIZE_STEP` and used by the website's
+page-size selector. Without `page`, the legacy array response remains available for API
+compatibility.
 
 SDK:
 
@@ -92,6 +101,12 @@ await downloads.versions.list("lumi", {
   branches: ["stable", "dev"],
   versions: ["1.6"],
   limit: 20,
+});
+
+await downloads.versions.page("lumi", {
+  branches: ["stable", "dev"],
+  versions: ["1.6"],
+  page: 2,
 });
 ```
 

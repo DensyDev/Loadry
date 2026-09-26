@@ -25,9 +25,15 @@ const limitSchema = z.preprocess(
   z.coerce.number().int().min(1).max(1000).optional()
 );
 
+const pageSchema = z.preprocess(
+  value => (Array.isArray(value) ? value[0] : value),
+  z.coerce.number().int().min(1).optional()
+);
+
 export const versionsQuerySchema = z.object({
   branches: filterListSchema,
   limit: limitSchema,
+  page: pageSchema,
   versions: filterListSchema,
 });
 

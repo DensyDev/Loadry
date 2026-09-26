@@ -7,9 +7,11 @@ export type {
   Branch,
   Health,
   ListVersionsOptions,
+  ListVersionPageOptions,
   LookupVersionOptions,
   Project,
   Provider,
   Version,
+  VersionPage,
   VersionLookupResult,
 } from "@densy/loadry-contracts";

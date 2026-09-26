@@ -54,6 +54,19 @@ export const versionSchema = z.object({
   version: z.string(),
 });
 
+export const versionPageSchema = z.object({
+  items: z.array(versionSchema),
+  pagination: z.object({
+    maxPageSize: z.number().int().positive(),
+    page: z.number().int().positive(),
+    pageSize: z.number().int().positive(),
+    pageSizeStep: z.number().int().positive(),
+    totalItems: z.number().int().nonnegative(),
+    totalPages: z.number().int().positive(),
+  }),
+  series: z.array(z.string()),
+});
+
 export const versionLookupResultSchema = z.object({
   neighbors: z.object({
     newer: versionSchema.nullable(),
@@ -86,12 +99,20 @@ export type Health = z.infer<typeof healthSchema>;
 export type Provider = z.infer<typeof providerSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Version = z.infer<typeof versionSchema>;
+export type VersionPage = z.infer<typeof versionPageSchema>;
 export type VersionLookupResult = z.infer<typeof versionLookupResultSchema>;
 export type ApiErrorResponse = z.infer<typeof apiErrorSchema>;
 
 export type ListVersionsOptions = {
   branches?: readonly string[];
   limit?: number;
+  versions?: readonly string[];
+};
+
+export type ListVersionPageOptions = {
+  branches?: readonly string[];
+  limit?: number;
+  page?: number;
   versions?: readonly string[];
 };
 

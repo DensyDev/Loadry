@@ -30,6 +30,15 @@
     "branch": "Dal",
     "version": "Sürüm"
   },
+  "pagination": {
+    "label": "Sürüm sayfaları",
+    "previous": "Önceki sayfa",
+    "next": "Sonraki sayfa",
+    "summary": "{{total}} derlemeden {{from}}–{{to}} arası",
+    "pageSize": "Sayfa başına derleme",
+    "pageSizeLimit": "İzin verilen en yüksek değer: {{max}}",
+    "apply": "Uygula"
+  },
   "projects": {
     "loading": "Projeler yükleniyor",
     "select": "Proje seç",

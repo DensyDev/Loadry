@@ -1,9 +1,18 @@
 import type { VersionEntry, VersionProviderSource } from "./types.js";
 import { sortEntries } from "./versioning.js";
 
+type VersionCacheEntry = {
+  expiresAt: number;
+  promise: Promise<VersionEntry[]>;
+};
+
+const versionCache = new WeakMap<VersionProviderSource[], VersionCacheEntry>();
+const versionCacheTtlMilliseconds = 30_000;
+
 export type VersionFilters = {
   branches?: string[];
   limit?: number | null;
+  page?: number;
   versions?: string[];
 };
 
@@ -59,27 +68,70 @@ export class VersionService {
   constructor(private readonly providers: VersionProviderSource[]) {}
 
   async loadAll() {
-    const result = await Promise.all(this.providers.map(provider => provider.loadEntries()));
+    const cached = versionCache.get(this.providers);
 
-    return sortEntries(
-      result.flat(),
-      this.providers.map(provider => provider.branch)
-    );
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.promise;
+    }
+
+    const promise = Promise.all(this.providers.map(provider => provider.loadEntries()))
+      .then(result =>
+        sortEntries(
+          result.flat(),
+          this.providers.map(provider => provider.branch)
+        )
+      );
+    const cacheEntry = {
+      expiresAt: Date.now() + versionCacheTtlMilliseconds,
+      promise,
+    };
+    versionCache.set(this.providers, cacheEntry);
+
+    try {
+      return await promise;
+    } catch (error) {
+      if (versionCache.get(this.providers) === cacheEntry) {
+        versionCache.delete(this.providers);
+      }
+
+      throw error;
+    }
   }
 
   async load(filters: VersionFilters = {}) {
     const entries = await this.loadAll();
     const branches = this.normalizeFilter(filters.branches);
     const versions = this.normalizeFilter(filters.versions);
-    const filteredEntries = entries.filter(entry => {
-      const matchesBranch = branches.length
-        ? branches.includes(entry.branch)
-        : entry.showInAllBranches;
-      const matchesVersion = versions.length ? versions.includes(entry.series) : true;
-      return matchesBranch && matchesVersion;
-    });
+    const filteredEntries = this.filterByVersions(
+      this.filterByBranches(entries, branches),
+      versions
+    );
 
     return filters.limit ? filteredEntries.slice(0, filters.limit) : filteredEntries;
+  }
+
+  async paginate(filters: VersionFilters, requestedPage: number, pageSize: number) {
+    const entries = await this.loadAll();
+    const branches = this.normalizeFilter(filters.branches);
+    const versions = this.normalizeFilter(filters.versions);
+    const branchEntries = this.filterByBranches(entries, branches);
+    const series = Array.from(new Set(branchEntries.map(entry => entry.series)));
+    const filteredEntries = this.filterByVersions(branchEntries, versions);
+    const totalItems = filteredEntries.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const page = Math.min(requestedPage, totalPages);
+    const start = (page - 1) * pageSize;
+
+    return {
+      items: filteredEntries.slice(start, start + pageSize),
+      pagination: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
+      },
+      series,
+    };
   }
 
   async lookup(branch: string, filters: VersionLookupFilter[]) {
@@ -96,5 +148,17 @@ export class VersionService {
 
   private normalizeFilter(values: string[] | undefined) {
     return Array.from(new Set(values?.filter(value => value && value !== "all") ?? []));
+  }
+
+  private filterByBranches(entries: VersionEntry[], branches: string[]) {
+    return entries.filter(entry =>
+      branches.length ? branches.includes(entry.branch) : entry.showInAllBranches
+    );
+  }
+
+  private filterByVersions(entries: VersionEntry[], versions: string[]) {
+    return entries.filter(entry =>
+      versions.length ? versions.includes(entry.series) : true
+    );
   }
 }

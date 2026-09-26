@@ -30,6 +30,15 @@
     "branch": "Rama",
     "version": "Versión"
   },
+  "pagination": {
+    "label": "Paginación de versiones",
+    "previous": "Página anterior",
+    "next": "Página siguiente",
+    "summary": "Compilaciones {{from}}–{{to}} de {{total}}",
+    "pageSize": "Compilaciones por página",
+    "pageSizeLimit": "Máximo permitido: {{max}}",
+    "apply": "Aplicar"
+  },
   "projects": {
     "loading": "Cargando proyectos",
     "select": "Seleccionar proyecto",

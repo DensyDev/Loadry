@@ -1,8 +1,10 @@
 import {
   type ListVersionsOptions,
+  type ListVersionPageOptions,
   type LookupVersionOptions,
   versionLookupResultSchema,
   versionSchema,
+  versionPageSchema,
 } from "@densy/loadry-contracts";
 import { z } from "zod";
 import type { HttpClient } from "../common/http-client.js";
@@ -26,6 +28,26 @@ export class VersionsResource {
     return this.http.get(
       withQuery(`/api/v1/projects/${encodeURIComponent(projectId)}/versions`, query),
       z.array(versionSchema),
+      options
+    );
+  }
+
+  page(
+    projectId: string,
+    filters: ListVersionPageOptions = {},
+    options: RequestOptions = {}
+  ) {
+    const query = new URLSearchParams({ page: String(filters.page ?? 1) });
+    appendList(query, "branches", filters.branches);
+    appendList(query, "versions", filters.versions);
+
+    if (filters.limit !== undefined) {
+      query.set("limit", String(filters.limit));
+    }
+
+    return this.http.get(
+      withQuery(`/api/v1/projects/${encodeURIComponent(projectId)}/versions`, query),
+      versionPageSchema,
       options
     );
   }

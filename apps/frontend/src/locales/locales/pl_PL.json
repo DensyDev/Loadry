@@ -30,6 +30,15 @@
     "branch": "Gałąź",
     "version": "Wersja"
   },
+  "pagination": {
+    "label": "Strony wersji",
+    "previous": "Poprzednia strona",
+    "next": "Następna strona",
+    "summary": "Kompilacje {{from}}–{{to}} z {{total}}",
+    "pageSize": "Kompilacji na stronę",
+    "pageSizeLimit": "Dozwolone maksimum: {{max}}",
+    "apply": "Zastosuj"
+  },
   "projects": {
     "loading": "Ładowanie projektów",
     "select": "Wybierz projekt",

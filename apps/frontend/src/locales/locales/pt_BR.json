@@ -30,6 +30,15 @@
     "branch": "Branch",
     "version": "Versão"
   },
+  "pagination": {
+    "label": "Paginação de versões",
+    "previous": "Página anterior",
+    "next": "Próxima página",
+    "summary": "Builds {{from}}–{{to}} de {{total}}",
+    "pageSize": "Builds por página",
+    "pageSizeLimit": "Máximo permitido: {{max}}",
+    "apply": "Aplicar"
+  },
   "projects": {
     "loading": "Carregando projetos",
     "select": "Selecionar projeto",

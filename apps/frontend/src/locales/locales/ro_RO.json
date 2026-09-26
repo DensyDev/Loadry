@@ -30,6 +30,15 @@
     "branch": "Ramură",
     "version": "Versiune"
   },
+  "pagination": {
+    "label": "Paginarea versiunilor",
+    "previous": "Pagina anterioară",
+    "next": "Pagina următoare",
+    "summary": "Build-uri {{from}}–{{to}} din {{total}}",
+    "pageSize": "Build-uri pe pagină",
+    "pageSizeLimit": "Maximum permis: {{max}}",
+    "apply": "Aplică"
+  },
   "projects": {
     "loading": "Se încarcă proiectele",
     "select": "Selectează proiectul",

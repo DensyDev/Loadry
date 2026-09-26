@@ -30,6 +30,15 @@
     "branch": "ブランチ",
     "version": "バージョン"
   },
+  "pagination": {
+    "label": "バージョンのページ",
+    "previous": "前のページ",
+    "next": "次のページ",
+    "summary": "{{total}} 件中 {{from}}–{{to}} 件のビルド",
+    "pageSize": "1ページのビルド数",
+    "pageSizeLimit": "許可される最大値: {{max}}",
+    "apply": "適用"
+  },
   "projects": {
     "loading": "プロジェクトを読み込んでいます",
     "select": "プロジェクトを選択",

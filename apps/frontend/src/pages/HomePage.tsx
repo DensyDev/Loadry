@@ -6,6 +6,7 @@ import { createProjectPath } from "../utils/project";
 import { ProjectSelector } from "../components/ProjectSelector";
 import { VersionFilters } from "../components/VersionFilters";
 import { VersionsTable } from "../components/VersionsTable";
+import { VersionPagination } from "../components/VersionPagination";
 import { useVersions } from "../hooks/useVersions";
 
 type HomePageProps = {
@@ -21,10 +22,13 @@ export function HomePage({ project }: HomePageProps) {
     entries,
     error,
     isLoading,
+    pagination,
     reload,
     seriesFilter,
     seriesOptions,
     setBranchFilter,
+    setPage,
+    setPageSize,
     setSeriesFilter,
   } = useVersions(project);
 
@@ -54,6 +58,17 @@ export function HomePage({ project }: HomePageProps) {
             error={error}
             isLoading={isLoading}
             onRetry={reload}
+          />
+          <VersionPagination
+            isLoading={isLoading}
+            maxPageSize={pagination.maxPageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            pageSizeStep={pagination.pageSizeStep}
+            totalItems={pagination.totalItems}
+            totalPages={pagination.totalPages}
           />
         </CardContent>
       </Card>
