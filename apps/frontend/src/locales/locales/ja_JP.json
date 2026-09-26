@@ -1,0 +1,68 @@
+{
+  "app": {
+    "projectTitle": "{{project}} のダウンロード",
+    "title": "ダウンロード"
+  },
+  "header": {
+    "theme": "テーマ",
+    "language": "言語",
+    "title": "ダウンロード"
+  },
+  "common": {
+    "copyLink": "リンクをコピー",
+    "copied": "リンクをコピーしました",
+    "download": "ダウンロード",
+    "refresh": "更新",
+    "resetFilters": "フィルターをリセット",
+    "retry": "再試行",
+    "downloadChecksum": "チェックサムをダウンロード",
+    "copyDirectLink": "直接リンクをコピー",
+    "copyDownloadLink": "ダウンロードリンクをコピー"
+  },
+  "branches": {
+    "dev": "開発版",
+    "stable": "安定版",
+    "legacy": "旧版"
+  },
+  "filters": {
+    "allBranches": "すべてのブランチ",
+    "allVersions": "すべてのバージョン",
+    "branch": "ブランチ",
+    "version": "バージョン"
+  },
+  "pagination": {
+    "label": "バージョンのページ",
+    "previous": "前のページ",
+    "next": "次のページ",
+    "summary": "{{total}} 件中 {{from}}–{{to}} 件のビルド",
+    "pageSize": "1ページのビルド数",
+    "pageSizeLimit": "許可される最大値: {{max}}",
+    "apply": "適用"
+  },
+  "projects": {
+    "loading": "プロジェクトを読み込んでいます",
+    "select": "プロジェクトを選択",
+    "emptyTitle": "プロジェクトが設定されていません",
+    "emptyDescription": "最初のプロジェクトを公開するには LOADRY_CONFIG_JSON または LOADRY_CONFIG_URL を設定してください。"
+  },
+  "theme": {
+    "dark": "ダーク",
+    "light": "ライト",
+    "system": "システム"
+  },
+  "home": {
+    "buildsCount": "{{count}} ビルド",
+    "empty": "選択したフィルターに一致するバージョンはありません。",
+    "file": "ファイル",
+    "loading": "設定済みのプロバイダーからバージョンを読み込んでいます。",
+    "provider": "プロバイダー",
+    "subtitle": "設定可能なバージョンプロバイダーを備えた単一ページのダウンロード一覧です。",
+    "tableTitle": "利用可能なバージョン",
+    "version": "バージョン",
+    "source": "ソース"
+  },
+  "errors": {
+    "loadProjects": "プロジェクトを読み込めませんでした",
+    "loadVersions": "バージョンを読み込めませんでした"
+  }
+}

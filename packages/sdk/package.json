@@ -1,0 +1,43 @@
+{
+  "name": "@densy/loadry-sdk",
+  "version": "0.1.0",
+  "description": "Type-safe JavaScript SDK for the Loadry API",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./v1": {
+      "types": "./dist/v1/index.d.ts",
+      "import": "./dist/v1/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prebuild": "npm run build --workspace @densy/loadry-contracts",
+    "pretypecheck": "npm run build --workspace @densy/loadry-contracts",
+    "test": "npm run build && node --test test/client.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/densydev/loadry.git",
+    "directory": "packages/sdk"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@densy/loadry-contracts": "*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

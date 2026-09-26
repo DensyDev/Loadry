@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@densy/loadry-contracts": ["../../packages/contracts/src/index.ts"],
+      "@densy/loadry-sdk": ["../../packages/sdk/src/index.ts"],
+      "@densy/loadry-sdk/v1": ["../../packages/sdk/src/v1/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

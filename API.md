@@ -1,17 +1,36 @@
-# Public API
+# Loadry Public API
 
-The public API is implemented with Express and versioned independently from the website. The
-current base path is `/api/v1`.
+The public API is implemented by the Express application in `apps/backend` and versioned
+independently from the website and SDK. The current base path is `/api/v1`.
 
-## Endpoints
+All API endpoints support cross-origin `GET`, `HEAD`, and `OPTIONS` requests.
 
-### Health
+## SDK
+
+The official client is available from `@densy/loadry-sdk/v1`:
+
+```ts
+import { DownloadsClient } from "@densy/loadry-sdk/v1";
+
+const downloads = new DownloadsClient({
+  baseUrl: "https://dl.lumi.su",
+});
+
+const projects = await downloads.projects.list();
+const versions = await downloads.versions.list("lumi", {
+  branches: ["dev"],
+  versions: ["1.6"],
+  limit: 10,
+});
+```
+
+The SDK uses the platform `fetch` implementation and works in modern browsers and Node.js.
+
+## Health
 
 ```http
 GET /api/v1/health
 ```
-
-Returns:
 
 ```json
 {
@@ -20,29 +39,40 @@ Returns:
 }
 ```
 
-### Projects
+SDK:
+
+```ts
+await downloads.health.check();
+```
+
+## Projects
 
 ```http
 GET /api/v1/projects
 GET /api/v1/projects/{projectId}
 ```
 
-The collection endpoint returns all configured projects. A project contains its branches,
-providers, forwarded domains, and links to the website and versions endpoint.
+Projects contain public metadata, branches, forwarded domains, providers, and links.
 
-### Versions
+SDK:
+
+```ts
+await downloads.projects.list();
+await downloads.projects.get("lumi");
+```
+
+## Versions
 
 ```http
 GET /api/v1/projects/{projectId}/versions
 ```
 
-Supported query parameters:
-
 | Parameter | Description |
 | --- | --- |
 | `branches` | Branch IDs separated by commas or passed multiple times |
 | `versions` | Version series separated by commas or passed multiple times |
-| `limit` | Maximum result count from `1` to `1000` |
+| `limit` | Result count from `1` to `1000`; in paginated mode it is capped by the server setting |
+| `page` | Enables paginated output and selects a one-based page number |
 
 Examples:
 
@@ -50,21 +80,43 @@ Examples:
 GET /api/v1/projects/lumi/versions?branches=dev
 GET /api/v1/projects/lumi/versions?branches=stable,dev&versions=1.6,1.5
 GET /api/v1/projects/lumi/versions?branches=dev&versions=1.6&limit=1
+GET /api/v1/projects/lumi/versions?branches=dev&page=2
 ```
 
-Without `branches`, the endpoint returns only entries whose provider is configured to appear in
-the all-branches view. Passing a branch explicitly also makes hidden legacy branches available.
-Each version may include a `properties` object with provider-specific build metadata. The
-Reposilite provider fills it from the matching `.properties` file when one exists.
+Without `branches`, the endpoint returns only entries configured for the all-branches view.
+Passing a branch explicitly also makes hidden branches available. Version responses can include
+provider-specific build metadata in `properties`.
 
-### Version lookup
+When `page` is present, the response is an object containing `items`, `series`, and pagination
+metadata. `limit` may request a smaller page, while `LOADRY_VERSIONS_PAGE_SIZE` controls both the
+default and maximum page size allowed by the server. Pagination metadata also includes
+`pageSizeStep`, configured through `LOADRY_VERSIONS_PAGE_SIZE_STEP` and used by the website's
+page-size selector. Without `page`, the legacy array response remains available for API
+compatibility.
+
+SDK:
+
+```ts
+await downloads.versions.list("lumi", {
+  branches: ["stable", "dev"],
+  versions: ["1.6"],
+  limit: 20,
+});
+
+await downloads.versions.page("lumi", {
+  branches: ["stable", "dev"],
+  versions: ["1.6"],
+  page: 2,
+});
+```
+
+## Version lookup
 
 ```http
 GET /api/v1/projects/{projectId}/versions/lookup
 ```
 
-Lookup performs an exact match inside one branch. The `branch` parameter and at least one lookup
-field are required:
+`branch` and at least one exact-match field are required:
 
 ```http
 GET /api/v1/projects/lumi/versions/lookup?branch=dev&properties.git.commit.id=34306164cd295823eb701f3ea8d4aa71de79e6ab
@@ -72,50 +124,47 @@ GET /api/v1/projects/lumi/versions/lookup?branch=dev&fileName=Lumi-1.6.4-2026062
 GET /api/v1/projects/lumi/versions/lookup?branch=dev&providerId=dev-snapshots&version=1.6.4-20260624.173236-4
 ```
 
-All primitive `VersionEntry` fields are searchable:
+Primitive version fields and arbitrary `properties.{key}` values are searchable. Multiple filters
+are combined with logical AND. A unique result contains the version, neighboring builds, and its
+position in the selected branch.
 
-`branch`, `branchLabel`, `checksumUrl`, `downloadUrl`, `fileName`, `id`, `logicalVersion`,
-`modifiedAt`, `providerId`, `providerLabel`, `series`, `showInAllBranches`, `sourceText`,
-`sourceUrl`, and `version`.
+SDK:
 
-Provider properties use the `properties.{key}` syntax. Property names may contain dots:
+```ts
+await downloads.versions.lookup("lumi", {
+  branch: "dev",
+  fields: {
+    "properties.git.commit.id": "34306164cd295823eb701f3ea8d4aa71de79e6ab",
+  },
+});
+```
+
+The endpoint returns `404` when nothing matches and `409` when the lookup is not unique.
+
+## Downloads
 
 ```http
-GET /api/v1/projects/lumi/versions/lookup?branch=dev&properties.github.repo=KoshakMineDev%2FLumi
+GET /download/{projectId}/{branch}/latest
+GET /download/{projectId}/{branch}/{fileName}
 ```
 
-Filters are combined with logical AND. A unique match returns the version, its neighboring builds,
-and its zero-based position in the branch:
+Legacy routes without a project ID resolve against the first configured project:
 
-```json
-{
-  "neighbors": {
-    "newer": null,
-    "older": {}
-  },
-  "position": {
-    "index": 0,
-    "newerCount": 0,
-    "olderCount": 20,
-    "total": 21
-  },
-  "version": {}
-}
+```http
+GET /download/{branch}/latest
+GET /download/{branch}/{fileName}
 ```
 
-The endpoint returns `404` when nothing matches and `409` when multiple versions match. For
-example, a common value such as `properties.github.repo` will usually require an additional filter
-to make the lookup unique.
+SDK:
 
-## Responses
-
-Collection endpoints return JSON arrays directly:
-
-```json
-[]
+```ts
+const url = downloads.downloads.getLatestUrl("lumi", "dev");
+const response = await downloads.downloads.fetchFile("lumi", "dev", "Lumi-1.6.4.jar");
 ```
 
-Single-resource endpoints return the resource object directly. Errors have a consistent message:
+## Errors
+
+Errors contain at least a message:
 
 ```json
 {
@@ -123,7 +172,9 @@ Single-resource endpoints return the resource object directly. Errors have a con
 }
 ```
 
-Invalid query parameters return status `400` and include validation details.
+Invalid query parameters return `400` with validation details. The SDK throws
+`DownloadsApiError` for non-success responses and `InvalidApiResponseError` when a response does
+not match the published contract.
 
-All API endpoints support cross-origin `GET` requests. A future incompatible API can be added as
-another Express router under `src/server/api/v2` and mounted at `/api/v2` without changing v1.
+Future incompatible APIs can be mounted under `apps/backend/src/api/v2` and exposed through
+`@densy/loadry-sdk/v2` without changing v1.

@@ -1,0 +1,68 @@
+{
+  "app": {
+    "projectTitle": "{{project}} İndirmeleri",
+    "title": "İndirmeler"
+  },
+  "header": {
+    "theme": "Tema",
+    "language": "Dil",
+    "title": "İndirmeler"
+  },
+  "common": {
+    "copyLink": "Bağlantıyı kopyala",
+    "copied": "Bağlantı kopyalandı",
+    "download": "İndir",
+    "refresh": "Yenile",
+    "resetFilters": "Filtreleri sıfırla",
+    "retry": "Tekrar dene",
+    "downloadChecksum": "Sağlama toplamını indir",
+    "copyDirectLink": "Doğrudan bağlantıyı kopyala",
+    "copyDownloadLink": "İndirme bağlantısını kopyala"
+  },
+  "branches": {
+    "dev": "Geliştirme",
+    "stable": "Kararlı",
+    "legacy": "Eski"
+  },
+  "filters": {
+    "allBranches": "Tüm dallar",
+    "allVersions": "Tüm sürümler",
+    "branch": "Dal",
+    "version": "Sürüm"
+  },
+  "pagination": {
+    "label": "Sürüm sayfaları",
+    "previous": "Önceki sayfa",
+    "next": "Sonraki sayfa",
+    "summary": "{{total}} derlemeden {{from}}–{{to}} arası",
+    "pageSize": "Sayfa başına derleme",
+    "pageSizeLimit": "İzin verilen en yüksek değer: {{max}}",
+    "apply": "Uygula"
+  },
+  "projects": {
+    "loading": "Projeler yükleniyor",
+    "select": "Proje seç",
+    "emptyTitle": "Yapılandırılmış proje yok",
+    "emptyDescription": "İlk projenizi yayınlamak için LOADRY_CONFIG_JSON veya LOADRY_CONFIG_URL değerini ayarlayın."
+  },
+  "theme": {
+    "dark": "Koyu",
+    "light": "Açık",
+    "system": "Sistem"
+  },
+  "home": {
+    "buildsCount": "{{count}} derleme",
+    "empty": "Seçilen filtrelerle eşleşen sürüm yok.",
+    "file": "Dosya",
+    "loading": "Yapılandırılmış sağlayıcılardan sürümler yükleniyor.",
+    "provider": "Sağlayıcı",
+    "subtitle": "Yapılandırılabilir sürüm sağlayıcılarına sahip tek sayfalık indirme listesi.",
+    "tableTitle": "Kullanılabilir sürümler",
+    "version": "Sürüm",
+    "source": "Kaynak"
+  },
+  "errors": {
+    "loadProjects": "Projeler yüklenemedi",
+    "loadVersions": "Sürümler yüklenemedi"
+  }
+}

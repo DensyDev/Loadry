@@ -1,0 +1,68 @@
+{
+  "app": {
+    "projectTitle": "Téléchargements de {{project}}",
+    "title": "Téléchargements"
+  },
+  "header": {
+    "theme": "Thème",
+    "language": "Langue",
+    "title": "Téléchargements"
+  },
+  "common": {
+    "copyLink": "Copier le lien",
+    "copied": "Lien copié",
+    "download": "Télécharger",
+    "refresh": "Actualiser",
+    "resetFilters": "Réinitialiser les filtres",
+    "retry": "Réessayer",
+    "downloadChecksum": "Télécharger la somme de contrôle",
+    "copyDirectLink": "Copier le lien direct",
+    "copyDownloadLink": "Copier le lien de téléchargement"
+  },
+  "branches": {
+    "dev": "Développement",
+    "stable": "Stable",
+    "legacy": "Ancienne"
+  },
+  "filters": {
+    "allBranches": "Toutes les branches",
+    "allVersions": "Toutes les versions",
+    "branch": "Branche",
+    "version": "Version"
+  },
+  "pagination": {
+    "label": "Pagination des versions",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "summary": "Builds {{from}}–{{to}} sur {{total}}",
+    "pageSize": "Builds par page",
+    "pageSizeLimit": "Maximum autorisé : {{max}}",
+    "apply": "Appliquer"
+  },
+  "projects": {
+    "loading": "Chargement des projets",
+    "select": "Sélectionner un projet",
+    "emptyTitle": "Aucun projet configuré",
+    "emptyDescription": "Définissez LOADRY_CONFIG_JSON ou LOADRY_CONFIG_URL pour publier votre premier projet."
+  },
+  "theme": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "system": "Système"
+  },
+  "home": {
+    "buildsCount": "{{count}} builds",
+    "empty": "Aucune version ne correspond aux filtres sélectionnés.",
+    "file": "Fichier",
+    "loading": "Chargement des versions depuis les fournisseurs configurés.",
+    "provider": "Fournisseur",
+    "subtitle": "Liste de téléchargements sur une seule page avec des fournisseurs de versions configurables.",
+    "tableTitle": "Versions disponibles",
+    "version": "Version",
+    "source": "Source"
+  },
+  "errors": {
+    "loadProjects": "Impossible de charger les projets",
+    "loadVersions": "Impossible de charger les versions"
+  }
+}

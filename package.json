@@ -1,36 +1,25 @@
 {
-  "name": "lumi-download",
+  "name": "@densy/loadry",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit",
-    "preview": "vite preview --host 127.0.0.1"
+    "build": "npm run build --workspace @densy/loadry-contracts && npm run build --workspace @densy/loadry-sdk && npm run typecheck --workspace @densy/loadry-backend && npm run build --workspace @densy/loadry-frontend",
+    "dev": "npm run dev --workspace @densy/loadry-frontend",
+    "preview": "npm run preview --workspace @densy/loadry-frontend",
+    "test": "npm run test --workspace @densy/loadry-backend && npm run test --workspace @densy/loadry-sdk",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   },
-  "dependencies": {
-    "@heroui/react": "^3.0.5",
-    "@heroui/styles": "^3.0.5",
-    "express": "^5.2.1",
-    "i18next": "^25.6.3",
-    "i18next-browser-languagedetector": "^8.2.0",
-    "lucide-react": "^0.555.0",
-    "react": "^19.2.0",
-    "react-circle-flags": "^0.0.30",
-    "react-dom": "^19.2.0",
-    "react-i18next": "^16.3.5",
-    "react-router-dom": "^7.9.6",
-    "zod": "^4.4.3"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/densydev/loadry.git"
   },
+  "license": "MIT",
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "@types/express": "^5.0.6",
-    "@types/react": "^19.2.6",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "typescript": "^5.9.3"
   }
 }

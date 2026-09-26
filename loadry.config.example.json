@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "lumi",
+      "name": "Lumi",
+      "description": "Minecraft Bedrock server software",
+      "domains": ["dl.lumi.su"],
+      "providers": [
+        {
+          "type": "reposilite",
+          "id": "stable-releases",
+          "label": "Stable / Releases",
+          "branch": "stable",
+          "branchLabel": "branches.stable",
+          "showInAllBranches": true,
+          "baseUrl": "https://repo.lumi.su",
+          "repository": "releases",
+          "groupId": "com.koshakmine",
+          "artifactId": "Lumi"
+        },
+        {
+          "type": "reposilite",
+          "id": "dev-snapshots",
+          "label": "Dev / Snapshots",
+          "branch": "dev",
+          "branchLabel": "branches.dev",
+          "showInAllBranches": true,
+          "baseUrl": "https://repo.lumi.su",
+          "repository": "snapshots",
+          "groupId": "com.koshakmine",
+          "artifactId": "Lumi"
+        },
+        {
+          "type": "reposilite",
+          "id": "legacy-snapshots",
+          "label": "Legacy Snapshots",
+          "branch": "legacy",
+          "branchLabel": "branches.legacy",
+          "showInAllBranches": false,
+          "baseUrl": "https://repo.lumi.su",
+          "repository": "snapshots",
+          "groupId": "com.koshakmine",
+          "artifactId": "Lumi-old",
+          "fileArtifactId": "Lumi"
+        }
+      ]
+    }
+  ]
+}

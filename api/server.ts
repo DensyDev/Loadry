@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createServerApp } from "../src/server/app.js";
+import { createServerApp } from "../apps/backend/src/app.js";
 
 declare const process: {
   env: Record<string, string | undefined>;
@@ -14,7 +14,7 @@ type VercelRequest = IncomingMessage & {
 };
 
 export default function server(request: VercelRequest, response: ServerResponse) {
-  const url = new URL(request.url ?? "/", "https://downloads.invalid");
+  const url = new URL(request.url ?? "/", "https://loadry.invalid");
   const path = url.searchParams.get("path");
 
   if (path) {
