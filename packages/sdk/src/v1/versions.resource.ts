@@ -20,6 +20,7 @@ export class VersionsResource {
     const query = new URLSearchParams();
     appendList(query, "branches", filters.branches);
     appendList(query, "versions", filters.versions);
+    appendSearchFilters(query, filters);
 
     if (filters.limit !== undefined) {
       query.set("limit", String(filters.limit));
@@ -40,6 +41,7 @@ export class VersionsResource {
     const query = new URLSearchParams({ page: String(filters.page ?? 1) });
     appendList(query, "branches", filters.branches);
     appendList(query, "versions", filters.versions);
+    appendSearchFilters(query, filters);
 
     if (filters.limit !== undefined) {
       query.set("limit", String(filters.limit));
@@ -70,6 +72,28 @@ export class VersionsResource {
 function appendList(query: URLSearchParams, key: string, values?: readonly string[]) {
   if (values?.length) {
     query.set(key, values.join(","));
+  }
+}
+
+function appendSearchFilters(
+  query: URLSearchParams,
+  filters: Pick<
+    ListVersionsOptions,
+    "modifiedAfter" | "modifiedBefore" | "propertyKey" | "propertyValue" | "query"
+  >
+) {
+  for (const key of [
+    "query",
+    "modifiedAfter",
+    "modifiedBefore",
+    "propertyKey",
+    "propertyValue",
+  ] as const) {
+    const value = filters[key]?.trim();
+
+    if (value) {
+      query.set(key, value);
+    }
   }
 }
 

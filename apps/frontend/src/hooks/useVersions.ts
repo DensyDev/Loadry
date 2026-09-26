@@ -7,6 +7,14 @@ import { useAsync } from "./useAsync";
 
 export type BranchFilter = Array<"all" | string>;
 
+export type VersionSearchFilters = {
+  modifiedFrom: string;
+  modifiedTo: string;
+  propertyKey: string;
+  propertyValue: string;
+  query: string;
+};
+
 const pageSizeStorageKey = "loadry.versions.pageSize";
 
 function parseMultiValue(value: string | null) {
@@ -30,12 +38,24 @@ function readStoredPageSize() {
   return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
+function toBoundaryISOString(value: string, endOfDay = false) {
+  if (!value) return undefined;
+  return new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}Z`).toISOString();
+}
+
 export function useVersions(project: Project) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reloadToken, setReloadToken] = useState(0);
   const [requestedPageSize, setRequestedPageSize] = useState(readStoredPageSize);
   const branchFilter = parseMultiValue(searchParams.get("branches")) as BranchFilter;
   const seriesFilter = parseMultiValue(searchParams.get("versions"));
+  const searchFilters: VersionSearchFilters = {
+    modifiedFrom: searchParams.get("from") ?? "",
+    modifiedTo: searchParams.get("to") ?? "",
+    propertyKey: searchParams.get("propertyKey") ?? "",
+    propertyValue: searchParams.get("propertyValue") ?? "",
+    query: searchParams.get("q") ?? "",
+  };
   const page = parsePage(searchParams.get("page"));
   const serializedBranches = serializeFilter(branchFilter);
   const serializedVersions = serializeFilter(seriesFilter);
@@ -43,6 +63,11 @@ export function useVersions(project: Project) {
     project.id,
     serializedBranches,
     serializedVersions,
+    searchFilters.query,
+    searchFilters.modifiedFrom,
+    searchFilters.modifiedTo,
+    searchFilters.propertyKey,
+    searchFilters.propertyValue,
     page,
     requestedPageSize,
   ].join(":");
@@ -53,7 +78,12 @@ export function useVersions(project: Project) {
       value: await downloads.versions.page(project.id, {
         branches: serializedBranches?.split(","),
         limit: requestedPageSize,
+        modifiedAfter: toBoundaryISOString(searchFilters.modifiedFrom),
+        modifiedBefore: toBoundaryISOString(searchFilters.modifiedTo, true),
         page,
+        propertyKey: searchFilters.propertyKey || undefined,
+        propertyValue: searchFilters.propertyValue || undefined,
+        query: searchFilters.query || undefined,
         versions: serializedVersions?.split(","),
       }),
     }),
@@ -62,6 +92,11 @@ export function useVersions(project: Project) {
       project.id,
       requestKey,
       requestedPageSize,
+      searchFilters.modifiedFrom,
+      searchFilters.modifiedTo,
+      searchFilters.propertyKey,
+      searchFilters.propertyValue,
+      searchFilters.query,
       serializedBranches,
       serializedVersions,
     ]
@@ -154,6 +189,32 @@ export function useVersions(project: Project) {
     });
   };
 
+  const setSearchFilters = (filters: VersionSearchFilters) => {
+    setSearchParams(current => {
+      const nextParams = new URLSearchParams(current);
+      const values = {
+        from: filters.modifiedFrom,
+        propertyKey: filters.propertyKey,
+        propertyValue: filters.propertyValue,
+        q: filters.query,
+        to: filters.modifiedTo,
+      };
+
+      for (const [key, value] of Object.entries(values)) {
+        const normalizedValue = value.trim();
+
+        if (normalizedValue) {
+          nextParams.set(key, normalizedValue);
+        } else {
+          nextParams.delete(key);
+        }
+      }
+
+      nextParams.delete("page");
+      return nextParams;
+    });
+  };
+
   const pagination = data?.pagination ?? {
     maxPageSize: requestedPageSize ?? 50,
     page,
@@ -171,11 +232,13 @@ export function useVersions(project: Project) {
     isLoading,
     pagination: isLoading ? { ...pagination, page } : pagination,
     reload: () => setReloadToken(current => current + 1),
+    searchFilters,
     seriesFilter,
     seriesOptions,
     setBranchFilter: (value: BranchFilter) => updateFilterParam("branches", value),
     setPage,
     setPageSize,
+    setSearchFilters,
     setSeriesFilter: (value: string[]) => updateFilterParam("versions", value),
   };
 }

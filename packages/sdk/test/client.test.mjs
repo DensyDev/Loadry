@@ -120,7 +120,11 @@ test("versions.page returns pagination metadata", async () => {
   const result = await client.versions.page("example", {
     branches: ["stable"],
     limit: 25,
+    modifiedAfter: "2026-01-01T00:00:00.000Z",
     page: 2,
+    propertyKey: "git.commit.id",
+    propertyValue: "abc123",
+    query: "portal fix",
     versions: ["1.6"],
   });
 
@@ -129,6 +133,10 @@ test("versions.page returns pagination metadata", async () => {
   assert.equal(url.searchParams.get("branches"), "stable");
   assert.equal(url.searchParams.get("versions"), "1.6");
   assert.equal(url.searchParams.get("limit"), "25");
+  assert.equal(url.searchParams.get("query"), "portal fix");
+  assert.equal(url.searchParams.get("modifiedAfter"), "2026-01-01T00:00:00.000Z");
+  assert.equal(url.searchParams.get("propertyKey"), "git.commit.id");
+  assert.equal(url.searchParams.get("propertyValue"), "abc123");
   assert.equal(result.pagination.totalItems, 75);
 });
 

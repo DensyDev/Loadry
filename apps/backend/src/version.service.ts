@@ -12,7 +12,12 @@ const versionCacheTtlMilliseconds = 30_000;
 export type VersionFilters = {
   branches?: string[];
   limit?: number | null;
+  modifiedAfter?: string;
+  modifiedBefore?: string;
   page?: number;
+  propertyKey?: string;
+  propertyValue?: string;
+  query?: string;
   versions?: string[];
 };
 
@@ -43,9 +48,12 @@ export type VersionLookupFilter = {
   value: string;
 };
 
+function normalizeTimestampMilliseconds(timestamp: number) {
+  return timestamp < 1_000_000_000_000 ? timestamp * 1000 : timestamp;
+}
+
 function normalizeTimestamp(timestamp: number) {
-  const milliseconds = timestamp < 1_000_000_000_000 ? timestamp * 1000 : timestamp;
-  return new Date(milliseconds).toISOString();
+  return new Date(normalizeTimestampMilliseconds(timestamp)).toISOString();
 }
 
 function matchesLookupFilter(entry: VersionEntry, filter: VersionLookupFilter) {
@@ -62,6 +70,37 @@ function matchesLookupFilter(entry: VersionEntry, filter: VersionLookupFilter) {
   }
 
   return entryValue !== null && String(entryValue) === filter.value;
+}
+
+function normalizeSearchValue(value: string) {
+  return value.trim().toLocaleLowerCase();
+}
+
+function searchableValues(entry: VersionEntry) {
+  const properties = Object.entries(entry.properties ?? {}).flatMap(([key, value]) => [
+    key,
+    value,
+    `${key}=${value}`,
+  ]);
+
+  return [
+    entry.id,
+    entry.fileName,
+    entry.logicalVersion,
+    entry.version,
+    entry.series,
+    entry.branch,
+    entry.branchLabel,
+    entry.providerId,
+    entry.providerLabel,
+    entry.sourceText,
+    entry.sourceUrl,
+    entry.modifiedAt === null ? null : normalizeTimestamp(entry.modifiedAt),
+    ...properties,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .join("\n")
+    .toLocaleLowerCase();
 }
 
 export class VersionService {
@@ -102,9 +141,9 @@ export class VersionService {
     const entries = await this.loadAll();
     const branches = this.normalizeFilter(filters.branches);
     const versions = this.normalizeFilter(filters.versions);
-    const filteredEntries = this.filterByVersions(
-      this.filterByBranches(entries, branches),
-      versions
+    const filteredEntries = this.filterBySearchOptions(
+      this.filterByVersions(this.filterByBranches(entries, branches), versions),
+      filters
     );
 
     return filters.limit ? filteredEntries.slice(0, filters.limit) : filteredEntries;
@@ -116,7 +155,10 @@ export class VersionService {
     const versions = this.normalizeFilter(filters.versions);
     const branchEntries = this.filterByBranches(entries, branches);
     const series = Array.from(new Set(branchEntries.map(entry => entry.series)));
-    const filteredEntries = this.filterByVersions(branchEntries, versions);
+    const filteredEntries = this.filterBySearchOptions(
+      this.filterByVersions(branchEntries, versions),
+      filters
+    );
     const totalItems = filteredEntries.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     const page = Math.min(requestedPage, totalPages);
@@ -160,5 +202,53 @@ export class VersionService {
     return entries.filter(entry =>
       versions.length ? versions.includes(entry.series) : true
     );
+  }
+
+  private filterBySearchOptions(entries: VersionEntry[], filters: VersionFilters) {
+    const searchTerms = normalizeSearchValue(filters.query ?? "").split(/\s+/).filter(Boolean);
+    const propertyKey = normalizeSearchValue(filters.propertyKey ?? "");
+    const propertyValue = normalizeSearchValue(filters.propertyValue ?? "");
+    const modifiedAfter = filters.modifiedAfter ? Date.parse(filters.modifiedAfter) : null;
+    const modifiedBefore = filters.modifiedBefore ? Date.parse(filters.modifiedBefore) : null;
+
+    return entries.filter(entry => {
+      if (searchTerms.length) {
+        const haystack = searchableValues(entry);
+
+        if (!searchTerms.every(term => haystack.includes(term))) {
+          return false;
+        }
+      }
+
+      if (
+        modifiedAfter !== null &&
+        (entry.modifiedAt === null ||
+          normalizeTimestampMilliseconds(entry.modifiedAt) < modifiedAfter)
+      ) {
+        return false;
+      }
+
+      if (
+        modifiedBefore !== null &&
+        (entry.modifiedAt === null ||
+          normalizeTimestampMilliseconds(entry.modifiedAt) > modifiedBefore)
+      ) {
+        return false;
+      }
+
+      if (propertyKey || propertyValue) {
+        const matchesProperty = Object.entries(entry.properties ?? {}).some(
+          ([key, value]) =>
+            (!propertyKey || normalizeSearchValue(key).includes(propertyKey)) &&
+            (!propertyValue || normalizeSearchValue(value).includes(propertyValue))
+        );
+
+        if (!matchesProperty) {
+          return false;
+        }
+      }
+
+      return true;
+    });
   }
 }

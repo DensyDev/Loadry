@@ -7,6 +7,7 @@ import { ProjectSelector } from "../components/ProjectSelector";
 import { VersionFilters } from "../components/VersionFilters";
 import { VersionsTable } from "../components/VersionsTable";
 import { VersionPagination } from "../components/VersionPagination";
+import { VersionSearch } from "../components/VersionSearch";
 import { useVersions } from "../hooks/useVersions";
 
 type HomePageProps = {
@@ -24,11 +25,13 @@ export function HomePage({ project }: HomePageProps) {
     isLoading,
     pagination,
     reload,
+    searchFilters,
     seriesFilter,
     seriesOptions,
     setBranchFilter,
     setPage,
     setPageSize,
+    setSearchFilters,
     setSeriesFilter,
   } = useVersions(project);
 
@@ -45,6 +48,10 @@ export function HomePage({ project }: HomePageProps) {
       />
       <Card>
         <CardContent className="space-y-4">
+          <VersionSearch
+            filters={searchFilters}
+            onChange={setSearchFilters}
+          />
           <VersionFilters
             branchFilter={branchFilter}
             branchOptions={branchOptions}
