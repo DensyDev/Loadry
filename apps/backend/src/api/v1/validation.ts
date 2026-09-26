@@ -30,10 +30,31 @@ const pageSchema = z.preprocess(
   z.coerce.number().int().min(1).optional()
 );
 
+const optionalTextSchema = (maximumLength: number) =>
+  z.preprocess(
+    value => {
+      const normalized = Array.isArray(value) ? value[0] : value;
+      return typeof normalized === "string" && normalized.trim()
+        ? normalized.trim()
+        : undefined;
+    },
+    z.string().max(maximumLength).optional()
+  );
+
+const optionalTimestampSchema = z.preprocess(
+  value => (Array.isArray(value) ? value[0] : value),
+  z.iso.datetime({ offset: true }).optional()
+);
+
 export const versionsQuerySchema = z.object({
   branches: filterListSchema,
   limit: limitSchema,
+  modifiedAfter: optionalTimestampSchema,
+  modifiedBefore: optionalTimestampSchema,
   page: pageSchema,
+  propertyKey: optionalTextSchema(200),
+  propertyValue: optionalTextSchema(500),
+  query: optionalTextSchema(200),
   versions: filterListSchema,
 });
 

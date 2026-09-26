@@ -1,9 +1,11 @@
 import {
   Button,
   Label,
+  Modal,
   NumberField,
   Pagination,
   Popover,
+  useOverlayState,
 } from "@heroui/react";
 import { Check, Minus, Plus, Rows3 } from "lucide-react";
 import { useState } from "react";
@@ -145,6 +147,7 @@ function PageSizeControl({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [draftValue, setDraftValue] = useState(pageSize);
+  const mobileModal = useOverlayState();
   const minimumPageSize = Math.min(pageSizeStep, maxPageSize);
 
   const handleOpenChange = (open: boolean) => {
@@ -161,58 +164,152 @@ function PageSizeControl({
     );
     onChange(value);
     setIsOpen(false);
+    mobileModal.close();
   };
 
   return (
-    <Popover isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Popover.Trigger>
-        <Button
-          aria-label={t("pagination.pageSize")}
-          isDisabled={isDisabled}
-          variant="tertiary"
-        >
-          <Rows3 aria-hidden="true" size={17} />
-          {pageSize}
-        </Button>
-      </Popover.Trigger>
-      <Popover.Content placement="top end">
-        <Popover.Arrow />
-        <Popover.Dialog className="w-64 space-y-4 p-4">
-          <Popover.Heading className="font-medium">
-            {t("pagination.pageSize")}
-          </Popover.Heading>
-          <NumberField
-            variant="secondary"
-            fullWidth
-            maxValue={maxPageSize}
-            minValue={minimumPageSize}
-            onChange={setDraftValue}
-            onKeyDown={event => {
-              if (event.key === "Enter") apply();
-            }}
-            step={pageSizeStep}
-            value={draftValue}
-          >
-            <Label className="sr-only">{t("pagination.pageSize")}</Label>
-            <NumberField.Group>
-              <NumberField.DecrementButton>
-                <Minus aria-hidden="true" size={16} />
-              </NumberField.DecrementButton>
-              <NumberField.Input />
-              <NumberField.IncrementButton>
-                <Plus aria-hidden="true" size={16} />
-              </NumberField.IncrementButton>
-            </NumberField.Group>
-          </NumberField>
-          <div className="text-xs text-muted">
-            {t("pagination.pageSizeLimit", { max: maxPageSize })}
-          </div>
-          <Button className="w-full" onPress={apply} variant="primary">
-            <Check aria-hidden="true" size={16} />
-            {t("pagination.apply")}
-          </Button>
-        </Popover.Dialog>
-      </Popover.Content>
-    </Popover>
+    <>
+      <div className="hidden sm:block">
+        <Popover isOpen={isOpen} onOpenChange={handleOpenChange}>
+          <Popover.Trigger>
+            <PageSizeButton
+              isDisabled={isDisabled}
+              label={t("pagination.pageSize")}
+              pageSize={pageSize}
+            />
+          </Popover.Trigger>
+          <Popover.Content placement="top end">
+            <Popover.Arrow />
+            <Popover.Dialog className="w-64 space-y-4 p-4">
+              <Popover.Heading className="font-medium">
+                {t("pagination.pageSize")}
+              </Popover.Heading>
+              <PageSizeEditor
+                draftValue={draftValue}
+                maxPageSize={maxPageSize}
+                minimumPageSize={minimumPageSize}
+                onApply={apply}
+                onDraftValueChange={setDraftValue}
+                pageSizeStep={pageSizeStep}
+              />
+            </Popover.Dialog>
+          </Popover.Content>
+        </Popover>
+      </div>
+
+      <div className="sm:hidden">
+        <Modal state={mobileModal}>
+          <PageSizeButton
+            isDisabled={isDisabled}
+            label={t("pagination.pageSize")}
+            onPress={() => setDraftValue(pageSize)}
+            pageSize={pageSize}
+          />
+          <Modal.Backdrop>
+            <Modal.Container placement="bottom" size="sm">
+              <Modal.Dialog>
+                <Modal.CloseTrigger />
+                <Modal.Header>
+                  <Modal.Heading>{t("pagination.pageSize")}</Modal.Heading>
+                </Modal.Header>
+                <Modal.Body>
+                  <div className="space-y-4 pb-2">
+                    <PageSizeEditor
+                      draftValue={draftValue}
+                      maxPageSize={maxPageSize}
+                      minimumPageSize={minimumPageSize}
+                      onApply={apply}
+                      onDraftValueChange={setDraftValue}
+                      pageSizeStep={pageSizeStep}
+                    />
+                  </div>
+                </Modal.Body>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
+      </div>
+    </>
+  );
+}
+
+type PageSizeButtonProps = {
+  isDisabled: boolean;
+  label: string;
+  onPress?: () => void;
+  pageSize: number;
+};
+
+function PageSizeButton({
+  isDisabled,
+  label,
+  onPress,
+  pageSize,
+}: PageSizeButtonProps) {
+  return (
+    <Button
+      aria-label={label}
+      isDisabled={isDisabled}
+      onPress={onPress}
+      variant="tertiary"
+    >
+      <Rows3 aria-hidden="true" size={17} />
+      {pageSize}
+    </Button>
+  );
+}
+
+type PageSizeEditorProps = {
+  draftValue: number;
+  maxPageSize: number;
+  minimumPageSize: number;
+  onApply: () => void;
+  onDraftValueChange: (value: number) => void;
+  pageSizeStep: number;
+};
+
+function PageSizeEditor({
+  draftValue,
+  maxPageSize,
+  minimumPageSize,
+  onApply,
+  onDraftValueChange,
+  pageSizeStep,
+}: PageSizeEditorProps) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <NumberField
+        variant="secondary"
+        fullWidth
+        maxValue={maxPageSize}
+        minValue={minimumPageSize}
+        onChange={onDraftValueChange}
+        onKeyDown={event => {
+          if (event.key === "Enter") onApply();
+        }}
+        step={pageSizeStep}
+        value={draftValue}
+      >
+        <Label className="sr-only">{t("pagination.pageSize")}</Label>
+        <NumberField.Group>
+          <NumberField.DecrementButton>
+            <Minus aria-hidden="true" size={16} />
+          </NumberField.DecrementButton>
+          <NumberField.Input />
+          <NumberField.IncrementButton>
+            <Plus aria-hidden="true" size={16} />
+          </NumberField.IncrementButton>
+        </NumberField.Group>
+      </NumberField>
+      <div className="text-xs text-muted">
+        {t("pagination.pageSizeLimit", { max: maxPageSize })}
+      </div>
+      <Button className="w-full" onPress={onApply} variant="primary">
+        <Check aria-hidden="true" size={16} />
+        {t("pagination.apply")}
+      </Button>
+    </>
   );
 }

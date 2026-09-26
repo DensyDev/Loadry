@@ -77,6 +77,54 @@ test("paginate applies branch and series filters before slicing", async () => {
   assert.equal(result.pagination.totalItems, 1);
 });
 
+test("paginate searches across version metadata and properties", async () => {
+  const searchable = {
+    ...entry("1.6.8", "stable", "1.6"),
+    fileName: "Lumi-1.6.8.jar",
+    properties: {
+      "git.commit.id": "abc123",
+      "git.commit.message.short": "Fix portal rendering",
+    },
+    sourceText: "fix: portal rendering",
+  };
+  const service = new VersionService([
+    provider([searchable, entry("1.6.7", "stable", "1.6")]),
+  ]);
+
+  const bySource = await service.paginate({ query: "portal fix" }, 1, 50);
+  const byProperty = await service.paginate(
+    { propertyKey: "commit.id", propertyValue: "ABC" },
+    1,
+    50
+  );
+
+  assert.deepEqual(bySource.items.map(item => item.id), ["1.6.8"]);
+  assert.deepEqual(byProperty.items.map(item => item.id), ["1.6.8"]);
+});
+
+test("paginate filters entries by modified date range", async () => {
+  const older = {
+    ...entry("older", "stable", "1.0"),
+    modifiedAt: Date.parse("2026-01-01T12:00:00Z"),
+  };
+  const newer = {
+    ...entry("newer", "stable", "1.0"),
+    modifiedAt: Date.parse("2026-02-01T12:00:00Z") / 1000,
+  };
+  const service = new VersionService([provider([newer, older])]);
+
+  const result = await service.paginate(
+    {
+      modifiedAfter: "2026-01-15T00:00:00.000Z",
+      modifiedBefore: "2026-02-28T23:59:59.999Z",
+    },
+    1,
+    50
+  );
+
+  assert.deepEqual(result.items.map(item => item.id), ["newer"]);
+});
+
 test("version entries are reused between page requests", async () => {
   let loads = 0;
   const providers: VersionProviderSource[] = [

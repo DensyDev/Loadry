@@ -103,13 +103,21 @@ export type VersionPage = z.infer<typeof versionPageSchema>;
 export type VersionLookupResult = z.infer<typeof versionLookupResultSchema>;
 export type ApiErrorResponse = z.infer<typeof apiErrorSchema>;
 
-export type ListVersionsOptions = {
+export type VersionSearchOptions = {
+  modifiedAfter?: string;
+  modifiedBefore?: string;
+  propertyKey?: string;
+  propertyValue?: string;
+  query?: string;
+};
+
+export type ListVersionsOptions = VersionSearchOptions & {
   branches?: readonly string[];
   limit?: number;
   versions?: readonly string[];
 };
 
-export type ListVersionPageOptions = {
+export type ListVersionPageOptions = VersionSearchOptions & {
   branches?: readonly string[];
   limit?: number;
   page?: number;
