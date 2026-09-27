@@ -1,28 +1,7 @@
 import { z } from "zod";
-import { ReposiliteVersionProviderSource } from "./providers/reposilite.js";
+import { identifierSchema } from "./providers/definition.js";
+import { createVersionProvider, providerConfigSchema } from "./providers/registry.js";
 import type { DownloadProject } from "./types.js";
-
-const identifierSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .regex(/^[a-z0-9][a-z0-9._-]*$/i, "Must be a URL-safe identifier");
-
-const reposiliteProviderConfigSchema = z
-  .object({
-    artifactId: z.string().trim().min(1),
-    baseUrl: z.url(),
-    branch: identifierSchema,
-    branchLabel: z.string().trim().min(1).optional(),
-    fileArtifactId: z.string().trim().min(1).optional(),
-    groupId: z.string().trim().min(1),
-    id: identifierSchema,
-    label: z.string().trim().min(1),
-    repository: z.string().trim().min(1),
-    showInAllBranches: z.boolean().optional(),
-    type: z.literal("reposilite"),
-  })
-  .strict();
 
 const projectConfigSchema = z
   .object({
@@ -30,7 +9,7 @@ const projectConfigSchema = z
     domains: z.array(z.string().trim().min(1)).default([]),
     id: identifierSchema,
     name: z.string().trim().min(1),
-    providers: z.array(reposiliteProviderConfigSchema),
+    providers: z.array(providerConfigSchema),
   })
   .strict()
   .superRefine((project, context) => {
@@ -74,14 +53,6 @@ export function createDownloadProjects(config: LoadryConfig): DownloadProject[] 
     domains: project.domains,
     id: project.id,
     name: project.name,
-    providers: project.providers.map(provider => {
-      switch (provider.type) {
-        case "reposilite":
-          return new ReposiliteVersionProviderSource({
-            ...provider,
-            branchLabel: provider.branchLabel ?? `branches.${provider.branch}`,
-          });
-      }
-    }),
+    providers: project.providers.map(createVersionProvider),
   }));
 }

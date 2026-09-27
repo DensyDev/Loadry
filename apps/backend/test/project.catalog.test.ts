@@ -46,6 +46,40 @@ test("inline JSON creates projects and provider instances", async () => {
   assert.equal(project?.providers[0]?.showInAllBranches, true);
 });
 
+test("provider registry creates static providers", async () => {
+  const config = {
+    projects: [
+      {
+        description: "Manual downloads",
+        domains: [],
+        id: "manual",
+        name: "Manual",
+        providers: [
+          {
+            branch: "stable",
+            entries: [
+              {
+                downloadUrl: "https://downloads.example.com/example.jar",
+                fileName: "example.jar",
+                version: "1.0.0",
+              },
+            ],
+            id: "manual-releases",
+            label: "Manual releases",
+            type: "static",
+          },
+        ],
+      },
+    ],
+    version: 1,
+  };
+  const catalog = new ProjectCatalog({ LOADRY_CONFIG_JSON: JSON.stringify(config) });
+  const project = (await catalog.getService()).findById("manual");
+
+  assert.equal(project?.providers[0]?.constructor.name, "StaticVersionProviderSource");
+  assert.equal((await project?.providers[0]?.loadEntries())?.[0]?.version, "1.0.0");
+});
+
 test("remote JSON uses bearer authentication and is cached", async () => {
   let calls = 0;
   const fetchImplementation: typeof fetch = async (input, init) => {
@@ -81,5 +115,16 @@ test("invalid and duplicate configuration is rejected", async () => {
   await assert.rejects(
     catalog.getService(),
     /Project IDs must be unique: example/
+  );
+});
+
+test("unregistered provider types are rejected with their config path", async () => {
+  const config = structuredClone(projectConfig);
+  config.projects[0]!.providers[0]!.type = "unknown";
+  const catalog = new ProjectCatalog({ LOADRY_CONFIG_JSON: JSON.stringify(config) });
+
+  await assert.rejects(
+    catalog.getService(),
+    /projects\.0\.providers\.0\.type: Unsupported provider type: unknown/
   );
 });

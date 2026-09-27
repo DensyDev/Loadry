@@ -2,10 +2,10 @@
   "version": 1,
   "projects": [
     {
-      "id": "lumi",
-      "name": "Lumi",
-      "description": "Minecraft Bedrock server software",
-      "domains": ["dl.lumi.su"],
+      "id": "reposilite",
+      "name": "Reposilite Example",
+      "description": "Example of downloads from the Reposilite repository",
+      "domains": [],
       "providers": [
         {
           "type": "reposilite",
@@ -14,10 +14,10 @@
           "branch": "stable",
           "branchLabel": "branches.stable",
           "showInAllBranches": true,
-          "baseUrl": "https://repo.lumi.su",
+          "baseUrl": "https://repo.reposilite.com",
           "repository": "releases",
-          "groupId": "com.koshakmine",
-          "artifactId": "Lumi"
+          "groupId": "com.reposilite",
+          "artifactId": "reposilite"
         },
         {
           "type": "reposilite",
@@ -26,23 +26,48 @@
           "branch": "dev",
           "branchLabel": "branches.dev",
           "showInAllBranches": true,
-          "baseUrl": "https://repo.lumi.su",
+          "baseUrl": "https://repo.reposilite.com",
           "repository": "snapshots",
-          "groupId": "com.koshakmine",
-          "artifactId": "Lumi"
-        },
+          "groupId": "com.reposilite",
+          "artifactId": "reposilite"
+        }
+      ]
+    },
+    {
+      "id": "maven-jetbrains-annotations",
+      "name": "Maven Jetbrains Annotations Example",
+      "description": "Example of downloads from the Maven repository for the JetBrains Java Annotations package",
+      "domains": [],
+      "providers": [
         {
-          "type": "reposilite",
-          "id": "legacy-snapshots",
-          "label": "Legacy Snapshots",
-          "branch": "legacy",
-          "branchLabel": "branches.legacy",
-          "showInAllBranches": false,
-          "baseUrl": "https://repo.lumi.su",
-          "repository": "snapshots",
-          "groupId": "com.koshakmine",
-          "artifactId": "Lumi-old",
-          "fileArtifactId": "Lumi"
+          "type": "maven",
+          "id": "releases",
+          "label": "Releases",
+          "branch": "Releases",
+          "baseUrl": "https://repo1.maven.org/maven2",
+          "groupId": "org.jetbrains",
+          "artifactId": "annotations",
+          "extension": "jar",
+          "classifier": null
+        }
+      ]
+    },
+    {
+      "id": "maven-google-guava",
+      "name": "Maven Google Guava Example",
+      "description": "Example of downloads from the Maven repository for the Google Guava package",
+      "domains": [],
+      "providers": [
+        {
+          "type": "maven",
+          "id": "releases",
+          "label": "Releases",
+          "branch": "Releases",
+          "baseUrl": "https://repo1.maven.org/maven2",
+          "groupId": "com.google.guava",
+          "artifactId": "guava",
+          "extension": "jar",
+          "classifier": null
         }
       ]
     }

@@ -1,18 +1,21 @@
+import { z } from "zod";
 import type { Branch, VersionEntry, VersionProviderSource } from "../types.js";
 import { normalizeSeries } from "../versioning.js";
+import { defineProvider, providerBaseSchema } from "./definition.js";
+import { buildSourceFromProperties, fetchTextOrNull, parseProperties } from "./support.js";
 
-type ReposiliteVersionProviderSourceOptions = {
-  artifactId: string;
-  baseUrl: string;
-  branch: Branch;
-  branchLabel?: string;
-  fileArtifactId?: string;
-  groupId: string;
-  id: string;
-  label: string;
-  repository: string;
-  showInAllBranches?: boolean;
-};
+export const reposiliteProviderConfigSchema = providerBaseSchema
+  .extend({
+    artifactId: z.string().trim().min(1),
+    baseUrl: z.url(),
+    fileArtifactId: z.string().trim().min(1).optional(),
+    groupId: z.string().trim().min(1),
+    repository: z.string().trim().min(1),
+    type: z.literal("reposilite"),
+  })
+  .strict();
+
+export type ReposiliteProviderConfig = z.output<typeof reposiliteProviderConfigSchema>;
 
 type ReposiliteFileDetails = {
   contentLength?: number;
@@ -38,16 +41,6 @@ async function fetchJson<T>(url: string) {
   return (await response.json()) as T;
 }
 
-async function fetchTextOrNull(url: string) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return response.text();
-}
-
 function isPrimaryJar(file: ReposiliteFileDetails, artifactId: string) {
   return (
     file.type === "FILE" &&
@@ -66,71 +59,6 @@ function extractResolvedVersion(artifactId: string, fileName: string) {
   return fileName.replace(`${artifactId}-`, "").replace(/\.jar$/, "");
 }
 
-function unescapePropertiesValue(value: string) {
-  return value
-    .replace(/\\:/g, ":")
-    .replace(/\\=/g, "=")
-    .replace(/\\#/g, "#")
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t")
-    .replace(/\\\\/g, "\\");
-}
-
-function parseProperties(content: string) {
-  return content.split(/\r?\n/).reduce<Record<string, string>>((properties, rawLine) => {
-    const line = rawLine.trim();
-
-    if (!line || line.startsWith("#") || line.startsWith("!")) {
-      return properties;
-    }
-
-    const separatorIndex = line.search(/[:=]/);
-
-    if (separatorIndex === -1) {
-      return properties;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    const value = line.slice(separatorIndex + 1).trim();
-    properties[key] = unescapePropertiesValue(value);
-    return properties;
-  }, {});
-}
-
-function normalizeGitHubRepositoryUrl(properties: Record<string, string>) {
-  const remoteUrl = properties["git.remote.origin.url"]?.replace(/\.git$/, "");
-
-  if (remoteUrl?.startsWith("https://github.com/")) {
-    return remoteUrl;
-  }
-
-  const githubRepository = properties["github.repo"];
-
-  if (githubRepository) {
-    return `https://github.com/${githubRepository}`;
-  }
-
-  return null;
-}
-
-function buildSourceFromProperties(properties: Record<string, string>) {
-  const commitId = properties["git.commit.id"];
-  const repositoryUrl = normalizeGitHubRepositoryUrl(properties);
-
-  if (!commitId || !repositoryUrl) {
-    return {
-      sourceText: null,
-      sourceUrl: null,
-    };
-  }
-
-  return {
-    sourceText: properties["git.commit.message.short"] ?? properties["git.commit.id.abbrev"] ?? commitId.slice(0, 7),
-    sourceUrl: `${repositoryUrl}/commit/${commitId}`,
-  };
-}
-
 export class ReposiliteVersionProviderSource implements VersionProviderSource {
   readonly artifactId: string;
   readonly baseUrl: string;
@@ -143,7 +71,7 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
   readonly repository: string;
   readonly showInAllBranches: boolean;
 
-  constructor(options: ReposiliteVersionProviderSourceOptions) {
+  constructor(options: ReposiliteProviderConfig) {
     this.artifactId = options.artifactId;
     this.baseUrl = options.baseUrl.replace(/\/$/, "");
     this.branch = options.branch;
@@ -261,3 +189,9 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
     return entries.flat();
   }
 }
+
+export const reposiliteProviderDefinition = defineProvider({
+  create: config => new ReposiliteVersionProviderSource(config),
+  schema: reposiliteProviderConfigSchema,
+  type: "reposilite",
+});

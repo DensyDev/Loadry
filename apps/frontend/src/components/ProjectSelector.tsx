@@ -37,9 +37,13 @@ export function ProjectSelector({ onChange, project, projects }: ProjectSelector
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
             <PackageOpen aria-hidden="true" size={20} />
           </span>
-          <span className="min-w-0">
-            <span className="block truncate font-semibold">{project.name}</span>
-            <span className="block truncate text-sm text-muted">{project.description}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block max-w-full whitespace-normal break-words font-semibold">
+              {project.name}
+            </span>
+            <span className="block max-w-full whitespace-normal break-words text-sm text-muted">
+              {project.description}
+            </span>
           </span>
         </span>
         <Select.Indicator>
@@ -55,10 +59,14 @@ export function ProjectSelector({ onChange, project, projects }: ProjectSelector
               textValue={`${option.name} ${option.description}`}
               {...({ onPress: () => handleChange(option.id) } as any)}
             >
-              <span className="flex w-full items-center justify-between gap-4 py-1">
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{option.name}</span>
-                  <span className="block truncate text-sm text-muted">{option.description}</span>
+              <span className="flex w-full min-w-0 items-center justify-between gap-4 py-1">
+                <span className="min-w-0 flex-1">
+                  <span className="block max-w-full whitespace-normal break-words font-medium">
+                    {option.name}
+                  </span>
+                  <span className="block max-w-full whitespace-normal break-words text-sm text-muted">
+                    {option.description}
+                  </span>
                 </span>
                 {option.id === project.id && <Check aria-hidden="true" className="shrink-0" size={16} />}
               </span>
