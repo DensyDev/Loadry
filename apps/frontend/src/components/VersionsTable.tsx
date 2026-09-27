@@ -8,7 +8,9 @@ import {
 } from "@heroui/react";
 import type { Version } from "@densy/loadry-contracts";
 import { RefreshCcw, ServerCrash } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { resolveLocale } from "../locales/helpers";
 import { DownloadSplitButton } from "./DownloadSplitButton";
 
 type VersionsTableProps = {
@@ -24,7 +26,16 @@ export function VersionsTable({
   isLoading,
   onRetry,
 }: VersionsTableProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const locale = resolveLocale(i18n.resolvedLanguage ?? i18n.language);
+  const dateTimeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale.bcp47, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+    [locale.bcp47]
+  );
 
   if (error) {
     return (
@@ -57,7 +68,7 @@ export function VersionsTable({
   }
 
   return (
-    <Table>
+    <Table key={locale.code}>
       <Table.ScrollContainer>
         <Table.Content aria-label={t("home.tableTitle")} className="min-w-[900px]">
           <Table.Header>
@@ -69,12 +80,26 @@ export function VersionsTable({
           </Table.Header>
             <Table.Body items={entries}>
             {entry => {
+              const formattedModifiedAt = entry.modifiedAt
+                ? dateTimeFormatter.format(new Date(entry.modifiedAt))
+                : null;
+
               return (
               <Table.Row id={entry.id}>
                 <Table.Cell>
                   <div>
                     <strong>{entry.version}</strong>
-                    <CardDescription>Series {entry.series}</CardDescription>
+                    <CardDescription>
+                      Series {entry.series}
+                      {formattedModifiedAt && (
+                        <>
+                          {" • "}
+                          <time dateTime={entry.modifiedAt ?? undefined}>
+                            {formattedModifiedAt}
+                          </time>
+                        </>
+                      )}
+                    </CardDescription>
                   </div>
                 </Table.Cell>
                 <Table.Cell>
