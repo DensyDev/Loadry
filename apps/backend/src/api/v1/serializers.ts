@@ -74,6 +74,7 @@ export function serializeVersion(
     fileName: entry.fileName,
     id: entry.id,
     logicalVersion: entry.logicalVersion,
+    maven: entry.maven,
     modifiedAt: toIsoTimestamp(entry.modifiedAt),
     properties: entry.properties,
     provider: {

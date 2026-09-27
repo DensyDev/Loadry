@@ -65,6 +65,19 @@ export const catalogSchema = z.object({
   site: siteSchema,
 });
 
+export const mavenArtifactSchema = z.object({
+  artifactId: z.string(),
+  classifier: z.string().nullable(),
+  extension: z.string(),
+  groupId: z.string(),
+  repository: z.object({
+    id: z.string(),
+    name: z.string(),
+    url: z.url(),
+  }),
+  version: z.string(),
+});
+
 export const versionSchema = z.object({
   branch: z.object({
     id: z.string(),
@@ -76,6 +89,7 @@ export const versionSchema = z.object({
   fileName: z.string(),
   id: z.string(),
   logicalVersion: z.string(),
+  maven: mavenArtifactSchema.nullable(),
   modifiedAt: z.iso.datetime().nullable(),
   properties: z.record(z.string(), z.string()).nullable(),
   provider: z.object({
@@ -137,6 +151,7 @@ export type Branch = z.infer<typeof branchSchema>;
 export type Catalog = z.infer<typeof catalogSchema>;
 export type Health = z.infer<typeof healthSchema>;
 export type LocalizedText = z.infer<typeof localizedTextSchema>;
+export type MavenArtifact = z.infer<typeof mavenArtifactSchema>;
 export type Provider = z.infer<typeof providerSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Site = z.infer<typeof siteSchema>;

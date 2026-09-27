@@ -8,6 +8,19 @@ export type DownloadProject = {
   providers: VersionProviderSource[];
 };
 
+export type MavenArtifact = {
+  artifactId: string;
+  classifier: string | null;
+  extension: string;
+  groupId: string;
+  repository: {
+    id: string;
+    name: string;
+    url: string;
+  };
+  version: string;
+};
+
 export type VersionEntry = {
   branch: Branch;
   branchLabel: string;
@@ -15,6 +28,7 @@ export type VersionEntry = {
   fileName: string;
   id: string;
   logicalVersion: string;
+  maven: MavenArtifact | null;
   modifiedAt: number | null;
   properties: Record<string, string> | null;
   providerId: string;

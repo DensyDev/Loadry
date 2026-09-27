@@ -133,6 +133,7 @@ export function VersionsTable({
                     directUrl={entry.directDownloadUrl}
                     downloadUrl={entry.downloadUrl}
                     fileName={entry.fileName}
+                    maven={entry.maven}
                   />
                 </Table.Cell>
               </Table.Row>

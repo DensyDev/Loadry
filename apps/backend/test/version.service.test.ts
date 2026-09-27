@@ -12,6 +12,7 @@ function entry(id: string, branch: string, series: string, showInAllBranches = t
     fileName: `${id}.jar`,
     id,
     logicalVersion: id,
+    maven: null,
     modifiedAt: null,
     properties: null,
     providerId: branch,

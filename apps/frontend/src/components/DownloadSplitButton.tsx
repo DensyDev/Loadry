@@ -1,15 +1,18 @@
-import { Button, Dropdown } from "@heroui/react";
-import { Check, ChevronDown, Copy, Download, Fingerprint, Link } from "lucide-react";
+import { Button, Dropdown, useOverlayState } from "@heroui/react";
+import type { MavenArtifact } from "@densy/loadry-contracts";
+import { Braces, Check, ChevronDown, Copy, Download, Fingerprint, Link } from "lucide-react";
 import type { Key } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { copyToClipboard } from "../utils/clipboard";
+import { MavenDependencyModal } from "./MavenDependencyModal";
 
 type DownloadSplitButtonProps = {
   checksumUrl?: string | null;
   directUrl: string;
   downloadUrl: string;
   fileName: string;
+  maven: MavenArtifact | null;
 };
 
 function startDownload(url: string) {
@@ -26,9 +29,11 @@ export function DownloadSplitButton({
   directUrl,
   downloadUrl,
   fileName,
+  maven,
 }: DownloadSplitButtonProps) {
   const { t } = useTranslation();
   const [copiedKey, setCopiedKey] = useState<"direct" | "download" | null>(null);
+  const dependencyModal = useOverlayState();
 
   const handleCopy = async (key: "direct" | "download", url: string) => {
     await copyToClipboard(url);
@@ -48,70 +53,90 @@ export function DownloadSplitButton({
     if (key === "download-checksum" && checksumUrl) {
       startDownload(checksumUrl);
     }
+
+    if (key === "show-dependency" && maven) {
+      dependencyModal.open();
+    }
   };
 
   return (
-    <div className="inline-flex items-stretch overflow-hidden rounded-full">
-      <Button className="rounded-r-none" onPress={() => startDownload(downloadUrl)} variant="primary">
-        <Download aria-hidden="true" size={16} />
-        {t("common.download")}
-      </Button>
-      <Dropdown>
-        <Dropdown.Trigger>
-          <Button
-            aria-label={`${t("common.download")} ${fileName}`}
-            className="rounded-l-none border-l border-white/15"
-            isIconOnly
-            variant="primary"
-          >
-            <ChevronDown aria-hidden="true" size={16} />
-          </Button>
-        </Dropdown.Trigger>
-        <Dropdown.Popover>
-          <Dropdown.Menu aria-label={fileName} onAction={onAction}>
-            <Dropdown.Item
-              id="copy-direct-link"
-              key="copy-direct-link"
-              textValue={copiedKey === "direct" ? t("common.copied") : t("common.copyDirectLink")}
+    <>
+      <div className="inline-flex items-stretch overflow-hidden rounded-full">
+        <Button className="rounded-r-none" onPress={() => startDownload(downloadUrl)} variant="primary">
+          <Download aria-hidden="true" size={16} />
+          {t("common.download")}
+        </Button>
+        <Dropdown>
+          <Dropdown.Trigger>
+            <Button
+              aria-label={`${t("common.download")} ${fileName}`}
+              className="rounded-l-none border-l border-white/15"
+              isIconOnly
+              variant="primary"
             >
-              <span className="flex items-center gap-2">
-                {copiedKey === "direct" ? (
-                  <Check aria-hidden="true" size={16} />
-                ) : (
-                  <Link aria-hidden="true" size={16} />
-                )}
-                {copiedKey === "direct" ? t("common.copied") : t("common.copyDirectLink")}
-              </span>
-            </Dropdown.Item>
-            <Dropdown.Item
-              id="copy-download-link"
-              key="copy-download-link"
-              textValue={copiedKey === "download" ? t("common.copied") : t("common.copyDownloadLink")}
-            >
-              <span className="flex items-center gap-2">
-                {copiedKey === "download" ? (
-                  <Check aria-hidden="true" size={16} />
-                ) : (
-                  <Copy aria-hidden="true" size={16} />
-                )}
-                {copiedKey === "download" ? t("common.copied") : t("common.copyDownloadLink")}
-              </span>
-            </Dropdown.Item>
-            <Dropdown.Item
-              id="download-checksum"
-              key="download-checksum"
-              className="border-t border-default-200 pt-2"
-              isDisabled={!checksumUrl}
-              textValue={t("common.downloadChecksum")}
-            >
-              <span className="flex items-center gap-2">
-                <Fingerprint aria-hidden="true" size={16} />
-                {t("common.downloadChecksum")}
-              </span>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
-    </div>
+              <ChevronDown aria-hidden="true" size={16} />
+            </Button>
+          </Dropdown.Trigger>
+          <Dropdown.Popover>
+            <Dropdown.Menu aria-label={fileName} onAction={onAction}>
+              <Dropdown.Item
+                id="copy-direct-link"
+                key="copy-direct-link"
+                textValue={copiedKey === "direct" ? t("common.copied") : t("common.copyDirectLink")}
+              >
+                <span className="flex items-center gap-2">
+                  {copiedKey === "direct" ? (
+                    <Check aria-hidden="true" size={16} />
+                  ) : (
+                    <Link aria-hidden="true" size={16} />
+                  )}
+                  {copiedKey === "direct" ? t("common.copied") : t("common.copyDirectLink")}
+                </span>
+              </Dropdown.Item>
+              <Dropdown.Item
+                id="copy-download-link"
+                key="copy-download-link"
+                textValue={copiedKey === "download" ? t("common.copied") : t("common.copyDownloadLink")}
+              >
+                <span className="flex items-center gap-2">
+                  {copiedKey === "download" ? (
+                    <Check aria-hidden="true" size={16} />
+                  ) : (
+                    <Copy aria-hidden="true" size={16} />
+                  )}
+                  {copiedKey === "download" ? t("common.copied") : t("common.copyDownloadLink")}
+                </span>
+              </Dropdown.Item>
+              {maven && (
+                <Dropdown.Item
+                  className="border-t border-default-200 pt-2"
+                  id="show-dependency"
+                  key="show-dependency"
+                  textValue={t("dependencies.action", { defaultValue: "Maven / Gradle / SBT" })}
+                >
+                  <span className="flex items-center gap-2">
+                    <Braces aria-hidden="true" size={16} />
+                    {t("dependencies.action", { defaultValue: "Maven / Gradle / SBT" })}
+                  </span>
+                </Dropdown.Item>
+              )}
+              <Dropdown.Item
+                id="download-checksum"
+                key="download-checksum"
+                className={maven ? undefined : "border-t border-default-200 pt-2"}
+                isDisabled={!checksumUrl}
+                textValue={t("common.downloadChecksum")}
+              >
+                <span className="flex items-center gap-2">
+                  <Fingerprint aria-hidden="true" size={16} />
+                  {t("common.downloadChecksum")}
+                </span>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
+      </div>
+      {maven && <MavenDependencyModal artifact={maven} state={dependencyModal} />}
+    </>
   );
 }

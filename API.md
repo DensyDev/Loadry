@@ -103,6 +103,11 @@ Without `branches`, the endpoint returns only entries configured for the all-bra
 Passing a branch explicitly also makes hidden branches available. Version responses can include
 provider-specific build metadata in `properties`.
 
+Versions produced by Maven-compatible providers also contain a nullable `maven` object with the
+repository URL, group ID, artifact ID, logical version, extension, and optional classifier. The
+website uses this metadata to generate copyable Maven, Gradle Kotlin, Gradle Groovy, and SBT
+snippets. Timestamped snapshots retain their consumable `-SNAPSHOT` dependency version.
+
 When `page` is present, the response is an object containing `items`, `series`, `propertyKeys`, and
 pagination metadata. `propertyKeys` contains the unique property names found across every build in
 the project and can be used for filter autocompletion. `limit` may request a smaller page, while

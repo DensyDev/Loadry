@@ -59,6 +59,15 @@ function extractResolvedVersion(artifactId: string, fileName: string) {
   return fileName.replace(`${artifactId}-`, "").replace(/\.jar$/, "");
 }
 
+export function extractClassifier(logicalVersion: string, resolvedVersion: string) {
+  const escapedVersion = logicalVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const versionPattern = logicalVersion.endsWith("-SNAPSHOT")
+    ? `${escapedVersion.slice(0, -"-SNAPSHOT".length)}-\\d{8}\\.\\d{6}-\\d+`
+    : escapedVersion;
+  const match = resolvedVersion.match(new RegExp(`^${versionPattern}(?:-(.+))?$`));
+  return match?.[1] ?? null;
+}
+
 export class ReposiliteVersionProviderSource implements VersionProviderSource {
   readonly artifactId: string;
   readonly baseUrl: string;
@@ -115,6 +124,10 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
     return `${this.instanceBaseUrl}/${this.repository}/${path}`;
   }
 
+  private get repositoryUrl() {
+    return `${this.instanceBaseUrl}/${this.repository}`;
+  }
+
   private async fetchDirectoryDetails(path: string) {
     return fetchJson<ReposiliteDirectoryDetails>(this.buildDetailsUrl(path));
   }
@@ -158,6 +171,18 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
       fileName: file.name,
       id: `${this.id}:${logicalVersion}:${file.name}`,
       logicalVersion,
+      maven: {
+        artifactId: this.artifactId,
+        classifier: extractClassifier(logicalVersion, resolvedVersion),
+        extension: "jar",
+        groupId: this.groupId,
+        repository: {
+          id: this.id,
+          name: this.label,
+          url: this.repositoryUrl,
+        },
+        version: logicalVersion,
+      },
       modifiedAt: file.lastModifiedTime ?? null,
       properties,
       providerId: this.id,

@@ -70,6 +70,10 @@ checksum action when that file exists. When `includeProperties` is enabled, Load
 adjacent file with the artifact extension replaced by `.properties` and uses Git properties to
 build source links.
 
+Maven and Reposilite builds expose their repository and artifact coordinates in the API. The
+download menu uses them to generate ready-to-copy Maven, Gradle Kotlin, Gradle Groovy, and SBT
+repository and dependency declarations, including snapshot versions and classifiers.
+
 ### Static provider
 
 The `static` provider accepts entries directly in the Loadry configuration. It is useful for files

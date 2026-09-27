@@ -234,6 +234,18 @@ export class MavenVersionProviderSource implements VersionProviderSource {
       fileName,
       id: `${this.id}:${logicalVersion}:${fileName}`,
       logicalVersion,
+      maven: {
+        artifactId: this.artifactId,
+        classifier: this.classifier,
+        extension: this.extension,
+        groupId: this.groupId,
+        repository: {
+          id: this.id,
+          name: this.label,
+          url: this.baseUrl,
+        },
+        version: logicalVersion,
+      },
       modifiedAt: artifact.modifiedAt ?? resolved.modifiedAt,
       properties,
       providerId: this.id,

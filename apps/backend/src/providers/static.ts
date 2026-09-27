@@ -81,6 +81,7 @@ export class StaticVersionProviderSource implements VersionProviderSource {
         fileName: entry.fileName,
         id: entry.id ?? `${this.id}:${logicalVersion}:${entry.fileName}`,
         logicalVersion,
+        maven: null,
         modifiedAt: normalizeModifiedAt(entry.modifiedAt),
         properties: entry.properties ?? null,
         providerId: this.id,

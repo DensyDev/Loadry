@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MavenVersionProviderSource } from "../src/providers/maven.ts";
+import { extractClassifier } from "../src/providers/reposilite.ts";
 import { StaticVersionProviderSource } from "../src/providers/static.ts";
 
 test("static provider normalizes manually configured entries", async () => {
@@ -31,6 +32,7 @@ test("static provider normalizes manually configured entries", async () => {
     fileName: "example-1.4.0.jar",
     id: "manual-releases:1.4.0:example-1.4.0.jar",
     logicalVersion: "1.4.0",
+    maven: null,
     modifiedAt: Date.parse("2026-09-27T12:00:00.000Z"),
     properties: { "git.commit.id": "abc123" },
     providerId: "manual-releases",
@@ -132,6 +134,18 @@ test("maven provider loads releases and timestamped snapshots from metadata", as
   assert.equal(entries[1]?.version, "1.1.0-20260927.120000-2");
   assert.equal(entries[1]?.fileName, "example-1.1.0-20260927.120000-2.jar");
   assert.equal(entries[1]?.modifiedAt, Date.UTC(2026, 8, 27, 12));
+  assert.deepEqual(entries[1]?.maven, {
+    artifactId: "example",
+    classifier: null,
+    extension: "jar",
+    groupId: "com.example",
+    repository: {
+      id: "maven-releases",
+      name: "Maven releases",
+      url: "https://repo.example.com/releases",
+    },
+    version: "1.1.0-SNAPSHOT",
+  });
   assert.equal(
     entries[1]?.checksumUrl,
     "https://repo.example.com/releases/com/example/example/1.1.0-SNAPSHOT/example-1.1.0-20260927.120000-2.jar.sha1"
@@ -140,5 +154,18 @@ test("maven provider loads releases and timestamped snapshots from metadata", as
     requestedUrls.includes(
       "GET https://repo.example.com/releases/com/example/example/1.1.0-SNAPSHOT/maven-metadata.xml"
     )
+  );
+});
+
+test("reposilite classifier extraction supports releases and snapshots", () => {
+  assert.equal(extractClassifier("3.6.3", "3.6.3"), null);
+  assert.equal(extractClassifier("3.6.3", "3.6.3-all"), "all");
+  assert.equal(
+    extractClassifier("3.6.4-SNAPSHOT", "3.6.4-20260927.120000-2-all"),
+    "all"
+  );
+  assert.equal(
+    extractClassifier("3.6.4-SNAPSHOT", "3.6.4-20260927.120000-2"),
+    null
   );
 });
