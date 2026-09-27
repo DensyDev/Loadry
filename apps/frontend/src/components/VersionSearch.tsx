@@ -302,16 +302,28 @@ type SearchActionsProps = {
 
 function SearchActions({ onApply, onReset }: SearchActionsProps) {
   const { t } = useTranslation();
+  const applyLabel = t("filters.apply");
+  const resetLabel = t("filters.reset");
+  const hasLongLabels = applyLabel.length + resetLabel.length > 22;
 
   return (
-    <div className="flex gap-2">
-      <Button className="flex-1" onPress={onReset} variant="tertiary">
+    <div className="flex w-full min-w-0 gap-2">
+      <Button
+        aria-label={resetLabel}
+        className="min-w-0 shrink-0 px-3 sm:flex-1 sm:px-4"
+        onPress={onReset}
+        variant="tertiary"
+      >
         <X aria-hidden="true" size={16} />
-        {t("filters.reset")}
+        <span className="max-[359px]:hidden">{resetLabel}</span>
       </Button>
-      <Button className="flex-1" onPress={onApply} variant="primary">
+      <Button
+        className={`min-w-0 flex-1 px-3 sm:px-4 ${hasLongLabels ? "text-xs sm:text-sm" : ""}`}
+        onPress={onApply}
+        variant="primary"
+      >
         <Check aria-hidden="true" size={16} />
-        {t("filters.apply")}
+        <span className="truncate">{applyLabel}</span>
       </Button>
     </div>
   );
