@@ -9,7 +9,7 @@ import {
 import { serializeProject, serializeVersion } from "../serializers.js";
 import { versionLookupQuerySchema, versionsQuerySchema } from "../validation.js";
 
-function requestOrigin(protocol: string, host: string | undefined) {
+export function requestOrigin(protocol: string, host: string | undefined) {
   return `${protocol}://${host ?? "localhost"}`;
 }
 

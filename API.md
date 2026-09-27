@@ -45,6 +45,22 @@ SDK:
 await downloads.health.check();
 ```
 
+## Catalog
+
+```http
+GET /api/v1/catalog
+```
+
+Returns the public runtime site configuration and the same project array exposed by
+`GET /api/v1/projects`. The website uses this endpoint to load its header, footer, title, and
+project selector in one request.
+
+SDK:
+
+```ts
+const { site, projects } = await downloads.catalog.get();
+```
+
 ## Projects
 
 ```http

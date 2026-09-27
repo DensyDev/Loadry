@@ -42,6 +42,11 @@ the bearer token from `LOADRY_CONFIG_TOKEN` and is refreshed every
 With neither setting present, Loadry starts normally with an empty project catalog and shows setup
 instructions instead of serving a built-in project.
 
+The optional top-level `site` object customizes the browser title, header brand, and footer at
+runtime. Text may be a string or a locale map such as `{ "en_US": "Downloads", "ru_RU":
+"Загрузки" }`. Templates support `{site.name}`, `{project.name}`, `{project.id}`, and `{year}`.
+See `loadry.config.example.json` for a complete example.
+
 Paginated version lists contain 50 builds by default. Set `LOADRY_VERSIONS_PAGE_SIZE` to a value
 from `1` to `1000` to change the server-controlled page size. The page-size control increments by
 5; set `LOADRY_VERSIONS_PAGE_SIZE_STEP` to another positive divisor of the page size to change it.

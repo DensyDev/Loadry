@@ -61,6 +61,41 @@ test("projects.list returns validated projects", async () => {
   assert.equal(requestCache, "no-store");
 });
 
+test("catalog.get returns projects and runtime site configuration", async () => {
+  let requestedUrl = "";
+  const client = new DownloadsClient({
+    baseUrl: "https://downloads.example.com",
+    fetch: async input => {
+      requestedUrl = String(input);
+      return jsonResponse({
+        projects: [projectFixture()],
+        site: {
+          footer: {
+            enabled: true,
+            links: [
+              {
+                icon: "github",
+                label: "GitHub",
+                url: "https://github.com/example/project",
+              },
+            ],
+            text: "{site.name}",
+          },
+          header: { brand: "{project.name}", url: "/" },
+          name: "Example Downloads",
+          title: "{project.name} — {site.name}",
+        },
+      });
+    },
+  });
+
+  const catalog = await client.catalog.get();
+
+  assert.equal(catalog.site.name, "Example Downloads");
+  assert.equal(catalog.projects[0].id, "example");
+  assert.equal(requestedUrl, "https://downloads.example.com/api/v1/catalog");
+});
+
 test("client invokes fetch with the global receiver", async () => {
   const client = new DownloadsClient({
     baseUrl: "https://downloads.example.com",

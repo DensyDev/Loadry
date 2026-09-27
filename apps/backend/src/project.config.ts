@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { identifierSchema } from "./providers/definition.js";
 import { createVersionProvider, providerConfigSchema } from "./providers/registry.js";
+import { siteConfigSchema } from "./site.config.js";
 import type { DownloadProject } from "./types.js";
 
 const projectConfigSchema = z
@@ -23,6 +24,7 @@ const projectConfigSchema = z
 export const loadryConfigSchema = z
   .object({
     projects: z.array(projectConfigSchema).default([]),
+    site: siteConfigSchema,
     version: z.literal(1),
   })
   .strict()

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { ProjectCatalogState } from "../components/ProjectCatalogState";
 import { useProjectCatalog } from "../contexts/project-catalog.context";
@@ -10,12 +9,6 @@ export function ProjectPage() {
   const { error, isLoading, projectService, reload } = useProjectCatalog();
   const project = projectService.findById(projectId);
   const defaultProject = projectService.getDefault();
-
-  useEffect(() => {
-    if (project) {
-      document.title = `${project.name} — Loadry`;
-    }
-  }, [project]);
 
   if (isLoading || error) {
     return <ProjectCatalogState error={error} isLoading={isLoading} onRetry={reload} />;

@@ -37,7 +37,7 @@ export class ProjectCatalog {
       throw new Error(`Invalid Loadry configuration: ${zodErrorMessage(result.error)}`);
     }
 
-    const service = new ProjectService(createDownloadProjects(result.data));
+    const service = new ProjectService(createDownloadProjects(result.data), result.data.site);
     this.cachedService = service;
     this.expiresAt = Date.now() + this.cacheTtlMilliseconds;
     return service;

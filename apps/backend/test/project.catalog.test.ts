@@ -31,6 +31,34 @@ test("an unconfigured catalog is empty", async () => {
   const service = await catalog.getService();
 
   assert.deepEqual(service.projects, []);
+  assert.equal(service.site.name, "Loadry");
+  assert.equal(service.site.footer.links[0]?.icon, "github");
+});
+
+test("site appearance is parsed independently from projects", async () => {
+  const catalog = new ProjectCatalog({
+    LOADRY_CONFIG_JSON: JSON.stringify({
+      projects: [],
+      site: {
+        footer: {
+          enabled: true,
+          links: [],
+          text: { en_US: "Powered by {site.name}", ru_RU: "Работает на {site.name}" },
+        },
+        header: { brand: "{project.name}", url: null },
+        name: "Downloads",
+        title: "{project.name} — {site.name}",
+      },
+      version: 1,
+    }),
+  });
+  const service = await catalog.getService();
+
+  assert.equal(service.site.name, "Downloads");
+  assert.deepEqual(service.site.footer.text, {
+    en_US: "Powered by {site.name}",
+    ru_RU: "Работает на {site.name}",
+  });
 });
 
 test("inline JSON creates projects and provider instances", async () => {

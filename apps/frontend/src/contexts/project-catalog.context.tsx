@@ -1,4 +1,4 @@
-import type { Project } from "@densy/loadry-contracts";
+import type { Project, Site } from "@densy/loadry-contracts";
 import {
   createContext,
   type ReactNode,
@@ -10,6 +10,7 @@ import {
 import { useAsync } from "../hooks/useAsync";
 import { downloads } from "../services/downloads";
 import { ProjectService } from "../services/project.service";
+import { fallbackSite } from "../utils/site";
 
 type ProjectCatalogContextValue = {
   error: Error | null;
@@ -17,15 +18,17 @@ type ProjectCatalogContextValue = {
   projectService: ProjectService;
   projects: Project[];
   reload: () => void;
+  site: Site;
 };
 
 const ProjectCatalogContext = createContext<ProjectCatalogContextValue | null>(null);
 
 export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
   const [reloadToken, setReloadToken] = useState(0);
-  const loadProjects = useCallback(() => downloads.projects.list(), []);
-  const { data, error, isLoading } = useAsync(loadProjects, [loadProjects, reloadToken]);
-  const projects = data ?? [];
+  const loadCatalog = useCallback(() => downloads.catalog.get(), []);
+  const { data, error, isLoading } = useAsync(loadCatalog, [loadCatalog, reloadToken]);
+  const projects = data?.projects ?? [];
+  const site = data?.site ?? fallbackSite;
   const projectService = useMemo(() => new ProjectService(projects), [projects]);
   const value = useMemo(
     () => ({
@@ -34,8 +37,9 @@ export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
       projectService,
       projects,
       reload: () => setReloadToken(current => current + 1),
+      site,
     }),
-    [error, isLoading, projectService, projects]
+    [error, isLoading, projectService, projects, site]
   );
 
   return (
