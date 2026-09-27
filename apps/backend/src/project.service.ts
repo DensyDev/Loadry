@@ -1,11 +1,14 @@
+import type { Site } from "@densy/loadry-contracts";
 import type { DownloadProject } from "./types.js";
 import { normalizeDomain } from "./project.js";
 
 export class ProjectService {
   readonly projects: DownloadProject[];
+  readonly site: Site;
 
-  constructor(projects: DownloadProject[]) {
+  constructor(projects: DownloadProject[], site: Site) {
     this.projects = projects;
+    this.site = site;
   }
 
   findById(projectId: string | undefined) {

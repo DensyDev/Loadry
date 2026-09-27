@@ -1,5 +1,28 @@
 {
   "version": 1,
+  "site": {
+    "name": "Loadry",
+    "title": {
+      "en_US": "{project.name} — {site.name}"
+    },
+    "header": {
+      "brand": "{project.name}",
+      "url": "/"
+    },
+    "footer": {
+      "enabled": true,
+      "text": {
+        "en_US": "Downloads powered by {site.name}"
+      },
+      "links": [
+        {
+          "label": "GitHub",
+          "url": "https://github.com/DensyDev/Loadry",
+          "icon": "github"
+        }
+      ]
+    }
+  },
   "projects": [
     {
       "id": "reposilite",

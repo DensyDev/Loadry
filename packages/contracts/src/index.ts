@@ -13,6 +13,39 @@ export const providerSchema = z.object({
   label: z.string(),
 });
 
+export const localizedTextSchema = z.union([
+  z.string(),
+  z.record(z.string(), z.string()),
+]);
+
+export const siteLinkIconSchema = z.enum([
+  "book-open",
+  "external-link",
+  "github",
+  "globe",
+  "message-circle",
+]);
+
+export const siteSchema = z.object({
+  footer: z.object({
+    enabled: z.boolean(),
+    links: z.array(
+      z.object({
+        icon: siteLinkIconSchema.nullable(),
+        label: localizedTextSchema,
+        url: z.string(),
+      })
+    ),
+    text: localizedTextSchema.nullable(),
+  }),
+  header: z.object({
+    brand: localizedTextSchema,
+    url: z.string().nullable(),
+  }),
+  name: z.string(),
+  title: localizedTextSchema,
+});
+
 export const projectSchema = z.object({
   branches: z.array(branchSchema),
   description: z.string(),
@@ -25,6 +58,11 @@ export const projectSchema = z.object({
   }),
   name: z.string(),
   providers: z.array(providerSchema),
+});
+
+export const catalogSchema = z.object({
+  projects: z.array(projectSchema),
+  site: siteSchema,
 });
 
 export const versionSchema = z.object({
@@ -95,9 +133,13 @@ export const healthSchema = z.object({
 });
 
 export type Branch = z.infer<typeof branchSchema>;
+export type Catalog = z.infer<typeof catalogSchema>;
 export type Health = z.infer<typeof healthSchema>;
+export type LocalizedText = z.infer<typeof localizedTextSchema>;
 export type Provider = z.infer<typeof providerSchema>;
 export type Project = z.infer<typeof projectSchema>;
+export type Site = z.infer<typeof siteSchema>;
+export type SiteLinkIcon = z.infer<typeof siteLinkIconSchema>;
 export type Version = z.infer<typeof versionSchema>;
 export type VersionPage = z.infer<typeof versionPageSchema>;
 export type VersionLookupResult = z.infer<typeof versionLookupResultSchema>;

@@ -114,6 +114,22 @@ interval with `LOADRY_CONFIG_CACHE_TTL_SECONDS`.
 `50` and accepts values from `1` to `1000`. `LOADRY_VERSIONS_PAGE_SIZE_STEP` controls the increment
 of the page-size selector, defaults to `5`, and must evenly divide the configured page size.
 
+## Site appearance
+
+The optional top-level `site` object controls the public frontend without rebuilding it:
+
+- `name` is the site name and the fallback browser title;
+- `title` is the browser-title template used on project pages;
+- `header.brand` and `header.url` configure the header link;
+- `footer.enabled`, `footer.text`, and `footer.links` configure the footer.
+
+All visible text fields accept either one string or an object keyed by locale code. When the
+active locale is absent, Loadry falls back to English and then to the first configured value.
+Strings and URLs may contain `{site.name}`, `{project.name}`, `{project.id}`, and `{year}`.
+Footer link icons are optional and may be `github`, `book-open`, `globe`, `external-link`, or
+`message-circle`. Public links accept relative paths plus `http`, `https`, and `mailto` URLs.
+Omitting `site` preserves the standard Loadry title and enables a minimal GitHub footer.
+
 ## Routes
 
 Frontend:

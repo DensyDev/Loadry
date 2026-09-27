@@ -7,15 +7,19 @@ import {
   ToggleButtonGroup,
   useOverlayState,
 } from "@heroui/react";
+import type { Project, Site } from "@densy/loadry-contracts";
 import { Check, ChevronDown, Monitor, Moon, Sun } from "lucide-react";
 import type { Key } from "react";
 import { CircleFlag } from "react-circle-flags";
 import { useTranslation } from "react-i18next";
 import type { ThemeMode } from "../hooks/useTheme";
 import { localeDefinitions, resolveLocale } from "../locales";
+import { renderSiteTemplate, renderSiteText } from "../utils/site";
 
 type HeaderProps = {
   onThemeModeChange: (themeMode: ThemeMode) => void;
+  project: Project | null;
+  site: Site;
   themeMode: ThemeMode;
 };
 
@@ -55,7 +59,7 @@ function LanguageMenu({ activeLocaleCode, label, onAction }: LanguageMenuProps) 
   );
 }
 
-export function Header({ onThemeModeChange, themeMode }: HeaderProps) {
+export function Header({ onThemeModeChange, project, site, themeMode }: HeaderProps) {
   const { i18n, t } = useTranslation();
   const languageModal = useOverlayState();
   const themeModal = useOverlayState();
@@ -63,6 +67,10 @@ export function Header({ onThemeModeChange, themeMode }: HeaderProps) {
   const activeLocaleCode = activeLocale.code;
   const activeTheme = themeItems.find(item => item.id === themeMode) ?? themeItems[2];
   const ActiveThemeIcon = activeTheme.icon;
+  const brand = renderSiteText(site.header.brand, site, project, activeLocale);
+  const brandUrl = site.header.url
+    ? renderSiteTemplate(site.header.url, site, project)
+    : null;
 
   const changeLanguage = (key: Key | null) => {
     if (typeof key !== "string") {
@@ -101,7 +109,13 @@ export function Header({ onThemeModeChange, themeMode }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1382px] items-center justify-between gap-2 px-4 py-3 md:px-6">
-        <div className="min-w-0 truncate text-lg font-semibold">Loadry</div>
+        {brandUrl ? (
+          <a className="min-w-0 truncate text-lg font-semibold" href={brandUrl}>
+            {brand}
+          </a>
+        ) : (
+          <div className="min-w-0 truncate text-lg font-semibold">{brand}</div>
+        )}
 
         <div className="flex shrink-0 items-center gap-2">
           <div className="hidden sm:block">
