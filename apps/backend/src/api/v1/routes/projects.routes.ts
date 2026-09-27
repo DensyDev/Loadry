@@ -118,6 +118,7 @@ export function createProjectsRouter(
             maxPageSize: options.versionsPageSize,
             pageSizeStep: options.versionsPageSizeStep,
           },
+          propertyKeys: result.propertyKeys,
           series: result.series,
         });
         return;

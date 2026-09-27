@@ -1,9 +1,12 @@
 import {
   Button,
+  ComboBox,
   DateField,
   DateRangePicker,
   InputGroup,
+  Input,
   Label,
+  ListBox,
   Modal,
   Popover,
   RangeCalendar,
@@ -20,6 +23,7 @@ import type { VersionSearchFilters } from "../hooks/useVersions";
 type VersionSearchProps = {
   filters: VersionSearchFilters;
   onChange: (filters: VersionSearchFilters) => void;
+  propertyKeys: string[];
 };
 
 const emptyFilters: VersionSearchFilters = {
@@ -39,7 +43,7 @@ function countAdvancedFilters(filters: VersionSearchFilters) {
   ].filter(Boolean).length;
 }
 
-export function VersionSearch({ filters, onChange }: VersionSearchProps) {
+export function VersionSearch({ filters, onChange, propertyKeys }: VersionSearchProps) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState(filters);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -124,7 +128,11 @@ export function VersionSearch({ filters, onChange }: VersionSearchProps) {
                 <Popover.Heading className="font-medium">
                   {t("filters.advanced")}
                 </Popover.Heading>
-                <AdvancedSearchFields draft={draft} onDraftChange={setDraft} />
+                <AdvancedSearchFields
+                  draft={draft}
+                  onDraftChange={setDraft}
+                  propertyKeys={propertyKeys}
+                />
                 <SearchActions onApply={apply} onReset={reset} />
               </Popover.Dialog>
             </Popover.Content>
@@ -186,7 +194,11 @@ export function VersionSearch({ filters, onChange }: VersionSearchProps) {
                     <p className="text-xs leading-relaxed text-muted">
                       {t("filters.searchDescription")}
                     </p>
-                    <AdvancedSearchFields draft={draft} onDraftChange={setDraft} />
+                    <AdvancedSearchFields
+                      draft={draft}
+                      onDraftChange={setDraft}
+                      propertyKeys={propertyKeys}
+                    />
                     <SearchActions onApply={apply} onReset={reset} />
                   </div>
                 </Modal.Body>
@@ -202,10 +214,16 @@ export function VersionSearch({ filters, onChange }: VersionSearchProps) {
 type AdvancedSearchFieldsProps = {
   draft: VersionSearchFilters;
   onDraftChange: (filters: VersionSearchFilters) => void;
+  propertyKeys: string[];
 };
 
-function AdvancedSearchFields({ draft, onDraftChange }: AdvancedSearchFieldsProps) {
+function AdvancedSearchFields({
+  draft,
+  onDraftChange,
+  propertyKeys,
+}: AdvancedSearchFieldsProps) {
   const { t } = useTranslation();
+  const hasProperties = propertyKeys.length > 0;
   const dateRange =
     draft.modifiedFrom && draft.modifiedTo
       ? {
@@ -266,21 +284,51 @@ function AdvancedSearchFields({ draft, onDraftChange }: AdvancedSearchFieldsProp
         </DateRangePicker.Popover>
       </DateRangePicker>
 
-      <fieldset className="rounded-xl border border-default-300 bg-default-100/35 p-3">
+      <fieldset
+        className={`rounded-xl border border-default-300 bg-default-100/35 p-3 transition-opacity ${
+          hasProperties ? "" : "opacity-50"
+        }`}
+        disabled={!hasProperties}
+      >
         <legend className="px-1 text-sm font-medium text-foreground">
           {t("filters.properties")}
         </legend>
         <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
-          <TextField
-            onChange={value => update("propertyKey", value)}
-            value={draft.propertyKey}
+          <ComboBox
+            allowsCustomValue
+            fullWidth
+            inputValue={draft.propertyKey}
+            isDisabled={!hasProperties}
+            menuTrigger="input"
+            onInputChange={value => update("propertyKey", value)}
+            onSelectionChange={key => {
+              if (typeof key === "string") update("propertyKey", key);
+            }}
+            variant="secondary"
           >
             <Label>{t("filters.propertyKey")}</Label>
-            <InputGroup fullWidth variant="secondary">
-              <InputGroup.Input placeholder={t("filters.propertyKeyPlaceholder")} />
-            </InputGroup>
-          </TextField>
+            <ComboBox.InputGroup>
+              <Input placeholder={t("filters.propertyKeyPlaceholder")} />
+              {propertyKeys.length > 0 && <ComboBox.Trigger />}
+            </ComboBox.InputGroup>
+            {propertyKeys.length > 0 && (
+              <ComboBox.Popover>
+                <ListBox>
+                  {propertyKeys.map(propertyKey => (
+                    <ListBox.Item
+                      id={propertyKey}
+                      key={propertyKey}
+                      textValue={propertyKey}
+                    >
+                      {propertyKey}
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </ComboBox.Popover>
+            )}
+          </ComboBox>
           <TextField
+            isDisabled={!hasProperties}
             onChange={value => update("propertyValue", value)}
             value={draft.propertyValue}
           >

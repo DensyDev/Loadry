@@ -100,6 +100,27 @@ test("paginate searches across version metadata and properties", async () => {
 
   assert.deepEqual(bySource.items.map(item => item.id), ["1.6.8"]);
   assert.deepEqual(byProperty.items.map(item => item.id), ["1.6.8"]);
+  assert.deepEqual(byProperty.propertyKeys, [
+    "git.commit.id",
+    "git.commit.message.short",
+  ]);
+});
+
+test("paginate returns property keys from every project entry", async () => {
+  const visible = {
+    ...entry("visible", "stable", "1.0"),
+    properties: { "git.commit.id": "abc123" },
+  };
+  const filteredOut = {
+    ...entry("filtered", "dev", "2.0"),
+    properties: { "build.number": "42", "git.commit.id": "def456" },
+  };
+  const service = new VersionService([provider([visible, filteredOut])]);
+
+  const result = await service.paginate({ branches: ["stable"] }, 1, 50);
+
+  assert.deepEqual(result.items.map(item => item.id), ["visible"]);
+  assert.deepEqual(result.propertyKeys, ["build.number", "git.commit.id"]);
 });
 
 test("paginate filters entries by modified date range", async () => {

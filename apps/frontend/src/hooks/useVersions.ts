@@ -148,6 +148,8 @@ export function useVersions(project: Project) {
     ],
     [data?.series]
   );
+  const propertyKeys =
+    data?.propertyKeys ?? asyncState.data?.value.propertyKeys ?? [];
 
   const updateFilterParam = (key: string, values: string[]) => {
     setSearchParams(current => {
@@ -231,6 +233,7 @@ export function useVersions(project: Project) {
     error,
     isLoading,
     pagination: isLoading ? { ...pagination, page } : pagination,
+    propertyKeys,
     reload: () => setReloadToken(current => current + 1),
     searchFilters,
     seriesFilter,

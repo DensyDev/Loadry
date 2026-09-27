@@ -103,8 +103,10 @@ Without `branches`, the endpoint returns only entries configured for the all-bra
 Passing a branch explicitly also makes hidden branches available. Version responses can include
 provider-specific build metadata in `properties`.
 
-When `page` is present, the response is an object containing `items`, `series`, and pagination
-metadata. `limit` may request a smaller page, while `LOADRY_VERSIONS_PAGE_SIZE` controls both the
+When `page` is present, the response is an object containing `items`, `series`, `propertyKeys`, and
+pagination metadata. `propertyKeys` contains the unique property names found across every build in
+the project and can be used for filter autocompletion. `limit` may request a smaller page, while
+`LOADRY_VERSIONS_PAGE_SIZE` controls both the
 default and maximum page size allowed by the server. Pagination metadata also includes
 `pageSizeStep`, configured through `LOADRY_VERSIONS_PAGE_SIZE_STEP` and used by the website's
 page-size selector. Without `page`, the legacy array response remains available for API

@@ -24,6 +24,7 @@ export function HomePage({ project }: HomePageProps) {
     error,
     isLoading,
     pagination,
+    propertyKeys,
     reload,
     searchFilters,
     seriesFilter,
@@ -51,6 +52,7 @@ export function HomePage({ project }: HomePageProps) {
           <VersionSearch
             filters={searchFilters}
             onChange={setSearchFilters}
+            propertyKeys={propertyKeys}
           />
           <VersionFilters
             branchFilter={branchFilter}

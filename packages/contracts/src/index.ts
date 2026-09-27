@@ -102,6 +102,7 @@ export const versionPageSchema = z.object({
     totalItems: z.number().int().nonnegative(),
     totalPages: z.number().int().positive(),
   }),
+  propertyKeys: z.array(z.string()),
   series: z.array(z.string()),
 });
 

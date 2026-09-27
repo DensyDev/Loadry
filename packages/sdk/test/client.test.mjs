@@ -147,6 +147,7 @@ test("versions.page returns pagination metadata", async () => {
           totalItems: 75,
           totalPages: 2,
         },
+        propertyKeys: ["build.number", "git.commit.id"],
         series: ["1.6", "1.5"],
       });
     },
@@ -173,6 +174,7 @@ test("versions.page returns pagination metadata", async () => {
   assert.equal(url.searchParams.get("propertyKey"), "git.commit.id");
   assert.equal(url.searchParams.get("propertyValue"), "abc123");
   assert.equal(result.pagination.totalItems, 75);
+  assert.deepEqual(result.propertyKeys, ["build.number", "git.commit.id"]);
 });
 
 test("versions.lookup preserves property field names", async () => {

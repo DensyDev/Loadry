@@ -163,6 +163,9 @@ export class VersionService {
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     const page = Math.min(requestedPage, totalPages);
     const start = (page - 1) * pageSize;
+    const propertyKeys = Array.from(
+      new Set(entries.flatMap(entry => Object.keys(entry.properties ?? {})))
+    ).sort((left, right) => left.localeCompare(right));
 
     return {
       items: filteredEntries.slice(start, start + pageSize),
@@ -172,6 +175,7 @@ export class VersionService {
         totalItems,
         totalPages,
       },
+      propertyKeys,
       series,
     };
   }
