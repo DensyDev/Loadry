@@ -4,6 +4,7 @@ import {
   Dropdown,
   ListBox,
   Modal,
+  ScrollShadow,
   Select,
   Typography,
   useOverlayState,
@@ -51,6 +52,12 @@ function toggleSelection(key: Key | null, previous: string[]) {
   return [...selectedValues, key];
 }
 
+function cloneTagSelections(selections: TagSelections): TagSelections {
+  return Object.fromEntries(
+    Object.entries(selections).map(([group, values]) => [group, [...values]])
+  );
+}
+
 export function VersionFilters({
   branchFilter,
   branchOptions,
@@ -67,6 +74,9 @@ export function VersionFilters({
   const branchModal = useOverlayState();
   const seriesModal = useOverlayState();
   const tagsModal = useOverlayState();
+  const [branchDraft, setBranchDraft] = useState<BranchFilter>(branchFilter);
+  const [seriesDraft, setSeriesDraft] = useState(seriesFilter);
+  const [tagDraft, setTagDraft] = useState<TagSelections>(() => cloneTagSelections(tagFilter));
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [tagMenuColumnWidth, setTagMenuColumnWidth] = useState<number | null>(null);
   const tagTriggerRef = useRef<HTMLButtonElement>(null);
@@ -116,6 +126,10 @@ export function VersionFilters({
     (total, values) => total + values.length,
     0
   );
+  const draftTagCount = Object.values(tagDraft).reduce(
+    (total, values) => total + values.length,
+    0
+  );
 
   const updateTagGroup = (group: TagGroup, keys: "all" | Set<Key>) => {
     const nextValues = keys === "all"
@@ -128,22 +142,26 @@ export function VersionFilters({
     onTagChange(next);
   };
 
-  const toggleTagValue = (group: TagGroup, value: string) => {
-    const selectedKeys = new Set(tagFilter[group.id] ?? []);
+  const toggleTagDraftValue = (group: TagGroup, value: string) => {
+    setTagDraft(current => {
+      const selectedKeys = new Set(current[group.id] ?? []);
 
-    if (selectedKeys.has(value)) selectedKeys.delete(value);
-    else selectedKeys.add(value);
-    updateTagGroup(group, selectedKeys);
+      if (selectedKeys.has(value)) selectedKeys.delete(value);
+      else selectedKeys.add(value);
+      const next = { ...current };
+
+      if (selectedKeys.size) next[group.id] = Array.from(selectedKeys);
+      else delete next[group.id];
+      return next;
+    });
   };
 
   const branchListBoxProps = {
-    onAction: handleBranchChange,
     selectedKeys: new Set(branchFilter),
     selectionMode: "multiple",
   } as any;
 
   const seriesListBoxProps = {
-    onAction: handleSeriesChange,
     selectedKeys: new Set(seriesFilter),
     selectionMode: "multiple",
   } as any;
@@ -165,7 +183,6 @@ export function VersionFilters({
           </Typography.Paragraph>
           <div className="hidden sm:block">
             <Select
-              key={branchFilter.join("|")}
               placeholder={t("filters.branch")}
               variant="secondary"
             >
@@ -202,7 +219,11 @@ export function VersionFilters({
           </div>
           <div className="sm:hidden">
             <Modal state={branchModal}>
-              <Button className="w-full justify-between rounded-field px-3" variant="secondary">
+              <Button
+                className="w-full justify-between rounded-field px-3"
+                onPress={() => setBranchDraft([...branchFilter])}
+                variant="secondary"
+              >
                 <span className="truncate text-left">{branchValueLabel}</span>
                 <ChevronDown aria-hidden="true" size={16} />
               </Button>
@@ -213,33 +234,51 @@ export function VersionFilters({
                     <Modal.Header>
                       <Modal.Heading>{t("filters.branch")}</Modal.Heading>
                     </Modal.Header>
-                    <Modal.Body>
-                      <div className="flex flex-col gap-2">
-                        {branchOptions.map(option => {
-                          const isSelected = branchFilter.includes(
-                            option.id as BranchFilter[number]
-                          );
+                    <Modal.Body className="overflow-hidden">
+                      <ScrollShadow className="h-full overflow-y-auto" size={32}>
+                        <div className="flex flex-col gap-2 pb-1">
+                          {branchOptions.map(option => {
+                            const isSelected = branchDraft.includes(
+                              option.id as BranchFilter[number]
+                            );
 
-                          return (
-                            <Button
-                              className="w-full justify-between px-3"
-                              key={option.id}
-                              onPress={() => handleBranchChange(option.id)}
-                              variant={isSelected ? "secondary" : "tertiary"}
-                            >
-                              <span className="text-left">
-                                {option.labelKey
-                                  ? t(option.labelKey, {
-                                      defaultValue: option.label ?? option.id,
-                                    })
-                                  : option.label ?? option.id}
-                              </span>
-                              {isSelected && <Check aria-hidden="true" size={18} />}
-                            </Button>
-                          );
-                        })}
-                      </div>
+                            return (
+                              <Button
+                                className="w-full justify-between px-3"
+                                key={option.id}
+                                onPress={() =>
+                                  setBranchDraft(current =>
+                                    toggleSelection(option.id, current) as BranchFilter
+                                  )
+                                }
+                                variant={isSelected ? "secondary" : "tertiary"}
+                              >
+                                <span className="text-left">
+                                  {option.labelKey
+                                    ? t(option.labelKey, {
+                                        defaultValue: option.label ?? option.id,
+                                      })
+                                    : option.label ?? option.id}
+                                </span>
+                                {isSelected && <Check aria-hidden="true" size={18} />}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </ScrollShadow>
                     </Modal.Body>
+                    <Modal.Footer>
+                      <Button
+                        className="w-full"
+                        onPress={() => {
+                          onBranchChange(branchDraft);
+                          branchModal.close();
+                        }}
+                        variant="primary"
+                      >
+                        {t("filters.apply")}
+                      </Button>
+                    </Modal.Footer>
                   </Modal.Dialog>
                 </Modal.Container>
               </Modal.Backdrop>
@@ -254,7 +293,6 @@ export function VersionFilters({
         </Typography.Paragraph>
         <div className="hidden sm:block">
           <Select
-            key={seriesFilter.join("|")}
             placeholder={t("filters.version")}
             variant="secondary"
           >
@@ -289,7 +327,11 @@ export function VersionFilters({
         </div>
         <div className="sm:hidden">
           <Modal state={seriesModal}>
-            <Button className="w-full justify-between rounded-field px-3" variant="secondary">
+            <Button
+              className="w-full justify-between rounded-field px-3"
+              onPress={() => setSeriesDraft([...seriesFilter])}
+              variant="secondary"
+            >
               <span className="truncate text-left">{seriesValueLabel}</span>
               <ChevronDown aria-hidden="true" size={16} />
             </Button>
@@ -300,29 +342,45 @@ export function VersionFilters({
                   <Modal.Header>
                     <Modal.Heading>{t("filters.version")}</Modal.Heading>
                   </Modal.Header>
-                  <Modal.Body>
-                    <div className="flex flex-col gap-2">
-                      {seriesOptions.map(option => {
-                        const isSelected = seriesFilter.includes(option.id);
+                  <Modal.Body className="overflow-hidden">
+                    <ScrollShadow className="h-full overflow-y-auto" size={32}>
+                      <div className="flex flex-col gap-2 pb-1">
+                        {seriesOptions.map(option => {
+                          const isSelected = seriesDraft.includes(option.id);
 
-                        return (
-                          <Button
-                            className="w-full justify-between px-3"
-                            key={option.id}
-                            onPress={() => handleSeriesChange(option.id)}
-                            variant={isSelected ? "secondary" : "tertiary"}
-                          >
-                            <span className="text-left">
-                              {option.id === "all"
-                                ? t("filters.allVersions")
-                                : option.label ?? option.id}
-                            </span>
-                            {isSelected && <Check aria-hidden="true" size={18} />}
-                          </Button>
-                        );
-                      })}
-                    </div>
+                          return (
+                            <Button
+                              className="w-full justify-between px-3"
+                              key={option.id}
+                              onPress={() =>
+                                setSeriesDraft(current => toggleSelection(option.id, current))
+                              }
+                              variant={isSelected ? "secondary" : "tertiary"}
+                            >
+                              <span className="text-left">
+                                {option.id === "all"
+                                  ? t("filters.allVersions")
+                                  : option.label ?? option.id}
+                              </span>
+                              {isSelected && <Check aria-hidden="true" size={18} />}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </ScrollShadow>
                   </Modal.Body>
+                  <Modal.Footer>
+                    <Button
+                      className="w-full"
+                      onPress={() => {
+                        onSeriesChange(seriesDraft);
+                        seriesModal.close();
+                      }}
+                      variant="primary"
+                    >
+                      {t("filters.apply")}
+                    </Button>
+                  </Modal.Footer>
                 </Modal.Dialog>
               </Modal.Container>
             </Modal.Backdrop>
@@ -434,6 +492,7 @@ export function VersionFilters({
             <Modal state={tagsModal}>
               <Button
                 className="w-full justify-between rounded-field px-3"
+                onPress={() => setTagDraft(cloneTagSelections(tagFilter))}
                 style={{ color: "var(--accent-soft-foreground)" }}
                 variant="secondary"
               >
@@ -459,44 +518,58 @@ export function VersionFilters({
                         {t("filters.tags", { defaultValue: "Tags" })}
                       </Modal.Heading>
                     </Modal.Header>
-                    <Modal.Body>
-                      <div className="space-y-3">
-                        {tagGroups.map(group => (
-                          <section className="rounded-2xl border border-default-200 p-2" key={group.id}>
-                            <Typography.Paragraph className="px-2 pb-1 text-sm font-semibold">
-                              {group.label}
-                            </Typography.Paragraph>
-                            <div className="flex flex-col gap-1">
-                              {group.values.map(tag => {
-                                const isSelected = tagFilter[group.id]?.includes(tag.id) === true;
+                    <Modal.Body className="overflow-hidden">
+                      <ScrollShadow className="h-full overflow-y-auto" size={32}>
+                        <div className="space-y-3 pb-1">
+                          {tagGroups.map(group => (
+                            <section className="rounded-2xl border border-default-200 p-2" key={group.id}>
+                              <Typography.Paragraph className="px-2 pb-1 text-sm font-semibold">
+                                {group.label}
+                              </Typography.Paragraph>
+                              <div className="flex flex-col gap-1">
+                                {group.values.map(tag => {
+                                  const isSelected = tagDraft[group.id]?.includes(tag.id) === true;
 
-                                return (
-                                  <Button
-                                    className="w-full justify-between px-3"
-                                    key={tag.id}
-                                    onPress={() => toggleTagValue(group, tag.id)}
-                                    variant={isSelected ? "secondary" : "tertiary"}
-                                  >
-                                    <span className="text-left">{tag.label}</span>
-                                    {isSelected && <Check aria-hidden="true" size={18} />}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </section>
-                        ))}
-                        {selectedTagCount > 0 && (
-                          <Button
-                            className="w-full"
-                            onPress={() => onTagChange({})}
-                            variant="danger-soft"
-                          >
-                            <X aria-hidden="true" size={18} />
-                            {t("filters.clearTags", { defaultValue: "Clear tags" })}
-                          </Button>
-                        )}
-                      </div>
+                                  return (
+                                    <Button
+                                      className="w-full justify-between px-3"
+                                      key={tag.id}
+                                      onPress={() => toggleTagDraftValue(group, tag.id)}
+                                      variant={isSelected ? "secondary" : "tertiary"}
+                                    >
+                                      <span className="text-left">{tag.label}</span>
+                                      {isSelected && <Check aria-hidden="true" size={18} />}
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          ))}
+                          {draftTagCount > 0 && (
+                            <Button
+                              className="w-full"
+                              onPress={() => setTagDraft({})}
+                              variant="danger-soft"
+                            >
+                              <X aria-hidden="true" size={18} />
+                              {t("filters.clearTags", { defaultValue: "Clear tags" })}
+                            </Button>
+                          )}
+                        </div>
+                      </ScrollShadow>
                     </Modal.Body>
+                    <Modal.Footer>
+                      <Button
+                        className="w-full"
+                        onPress={() => {
+                          onTagChange(tagDraft);
+                          tagsModal.close();
+                        }}
+                        variant="primary"
+                      >
+                        {t("filters.apply")}
+                      </Button>
+                    </Modal.Footer>
                   </Modal.Dialog>
                 </Modal.Container>
               </Modal.Backdrop>

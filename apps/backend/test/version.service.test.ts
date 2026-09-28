@@ -258,3 +258,39 @@ test("version entries are reused between page requests", async () => {
 
   assert.equal(loads, 1);
 });
+
+test("stale version entries are used when a cache refresh fails", async () => {
+  const originalNow = Date.now;
+  let now = 1_000;
+  let loads = 0;
+  const providers: VersionProviderSource[] = [
+    {
+      ...provider([entry("1.0.0", "stable", "1.0")]),
+      loadEntries: async () => {
+        loads += 1;
+
+        if (loads > 1) {
+          throw new Error("fetch failed");
+        }
+
+        return [entry("1.0.0", "stable", "1.0")];
+      },
+    },
+  ];
+
+  Date.now = () => now;
+
+  try {
+    const initial = await new VersionService(providers).paginate({}, 1, 50);
+    now += 30_001;
+    const stale = await new VersionService(providers).paginate({}, 1, 50);
+    const cachedStale = await new VersionService(providers).paginate({}, 1, 50);
+
+    assert.deepEqual(initial.items.map(item => item.id), ["1.0.0"]);
+    assert.deepEqual(stale.items.map(item => item.id), ["1.0.0"]);
+    assert.deepEqual(cachedStale.items.map(item => item.id), ["1.0.0"]);
+    assert.equal(loads, 2);
+  } finally {
+    Date.now = originalNow;
+  }
+});

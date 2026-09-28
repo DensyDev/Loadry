@@ -108,6 +108,7 @@ export function useVersions(project: Project) {
 
   const loadEntries = useCallback(
     async () => ({
+      projectId: project.id,
       requestKey,
       value: await downloads.versions.page(project.id, {
         branches: serializedBranches?.split(","),
@@ -141,6 +142,8 @@ export function useVersions(project: Project) {
   const asyncState = useAsync(loadEntries, [loadEntries, reloadToken]);
   const data =
     asyncState.data?.requestKey === requestKey ? asyncState.data.value : null;
+  const latestProjectData =
+    data ?? (asyncState.data?.projectId === project.id ? asyncState.data.value : null);
   const hasCurrentData = data !== null;
   const isLoading = asyncState.isLoading || !hasCurrentData;
   const { error } = asyncState;
@@ -180,12 +183,12 @@ export function useVersions(project: Project) {
   const seriesOptions = useMemo(
     () => [
       { id: "all", label: null },
-      ...sortSeries(data?.series ?? []).map(series => ({ id: series, label: series })),
+      ...sortSeries(latestProjectData?.series ?? []).map(series => ({ id: series, label: series })),
     ],
-    [data?.series]
+    [latestProjectData?.series]
   );
   const propertyKeys =
-    data?.propertyKeys ?? asyncState.data?.value.propertyKeys ?? [];
+    latestProjectData?.propertyKeys ?? [];
 
   const updateFilterParam = (key: string, values: string[]) => {
     setSearchParams(current => {

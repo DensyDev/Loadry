@@ -9,6 +9,7 @@ type VersionCacheEntry = {
 
 const versionCache = new WeakMap<VersionProviderSource[], VersionCacheEntry>();
 const versionCacheTtlMilliseconds = 30_000;
+const versionCacheRetryMilliseconds = 5_000;
 
 export type VersionFilters = {
   branches?: string[];
@@ -116,7 +117,8 @@ export class VersionService {
       return cached.promise;
     }
 
-    const promise = Promise.all(
+    const stalePromise = cached?.promise;
+    const refreshPromise = Promise.all(
       this.providers.map(async provider =>
         (await provider.loadEntries()).map(entry => ({
           ...entry,
@@ -130,21 +132,43 @@ export class VersionService {
           this.providers.map(provider => provider.branch)
         )
       );
-    const cacheEntry = {
-      expiresAt: Date.now() + versionCacheTtlMilliseconds,
+    let cacheEntry: VersionCacheEntry;
+    const promise = refreshPromise
+      .then(entries => {
+        if (versionCache.get(this.providers) === cacheEntry) {
+          cacheEntry.expiresAt = Date.now() + versionCacheTtlMilliseconds;
+        }
+
+        return entries;
+      })
+      .catch(async error => {
+        if (stalePromise) {
+          try {
+            const entries = await stalePromise;
+
+            if (versionCache.get(this.providers) === cacheEntry) {
+              cacheEntry.expiresAt = Date.now() + versionCacheRetryMilliseconds;
+            }
+
+            return entries;
+          } catch {
+            // The previous request did not produce usable data either.
+          }
+        }
+
+        if (versionCache.get(this.providers) === cacheEntry) {
+          versionCache.delete(this.providers);
+        }
+
+        throw error;
+      });
+    cacheEntry = {
+      // Keep concurrent requests on the same promise even when loading takes longer than the TTL.
+      expiresAt: Number.POSITIVE_INFINITY,
       promise,
     };
     versionCache.set(this.providers, cacheEntry);
-
-    try {
-      return await promise;
-    } catch (error) {
-      if (versionCache.get(this.providers) === cacheEntry) {
-        versionCache.delete(this.providers);
-      }
-
-      throw error;
-    }
+    return promise;
   }
 
   async load(filters: VersionFilters = {}) {
