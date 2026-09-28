@@ -3,6 +3,7 @@ import {
   Dropdown,
   Label,
   Modal,
+  ScrollShadow,
   ToggleButton,
   ToggleButtonGroup,
   useOverlayState,
@@ -163,29 +164,31 @@ export function Header({ onThemeModeChange, project, site, themeMode }: HeaderPr
                     <Modal.Header>
                       <Modal.Heading>{t("header.language")}</Modal.Heading>
                     </Modal.Header>
-                    <Modal.Body>
-                      <div className="flex flex-col gap-2">
-                        {localeDefinitions.map(item => (
-                          <Button
-                            className="w-full justify-between px-3"
-                            key={item.code}
-                            onPress={() => selectMobileLanguage(item.code)}
-                            variant={item.code === activeLocaleCode ? "secondary" : "tertiary"}
-                          >
-                            <span className="flex items-center gap-3">
-                              <CircleFlag
-                                className="size-6 shrink-0"
-                                countryCode={item.flagCountryCode}
-                                height="24"
-                              />
-                              <span>{item.nativeLabel}</span>
-                            </span>
-                            {item.code === activeLocaleCode && (
-                              <Check aria-hidden="true" size={18} />
-                            )}
-                          </Button>
-                        ))}
-                      </div>
+                    <Modal.Body className="overflow-hidden">
+                      <ScrollShadow className="h-full overflow-y-auto" size={32}>
+                        <div className="flex flex-col gap-2 pb-1">
+                          {localeDefinitions.map(item => (
+                            <Button
+                              className="w-full justify-between px-3"
+                              key={item.code}
+                              onPress={() => selectMobileLanguage(item.code)}
+                              variant={item.code === activeLocaleCode ? "secondary" : "tertiary"}
+                            >
+                              <span className="flex items-center gap-3">
+                                <CircleFlag
+                                  className="size-6 shrink-0"
+                                  countryCode={item.flagCountryCode}
+                                  height="24"
+                                />
+                                <span>{item.nativeLabel}</span>
+                              </span>
+                              {item.code === activeLocaleCode && (
+                                <Check aria-hidden="true" size={18} />
+                              )}
+                            </Button>
+                          ))}
+                        </div>
+                      </ScrollShadow>
                     </Modal.Body>
                   </Modal.Dialog>
                 </Modal.Container>

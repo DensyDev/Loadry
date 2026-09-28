@@ -267,7 +267,7 @@ export function VersionFilters({
                         </div>
                       </ScrollShadow>
                     </Modal.Body>
-                    <Modal.Footer>
+                    <Modal.Footer style={{ marginTop: "0.5rem" }}>
                       <Button
                         className="w-full"
                         onPress={() => {
@@ -369,7 +369,7 @@ export function VersionFilters({
                       </div>
                     </ScrollShadow>
                   </Modal.Body>
-                  <Modal.Footer>
+                  <Modal.Footer style={{ marginTop: "0.5rem" }}>
                     <Button
                       className="w-full"
                       onPress={() => {
@@ -558,7 +558,7 @@ export function VersionFilters({
                         </div>
                       </ScrollShadow>
                     </Modal.Body>
-                    <Modal.Footer>
+                    <Modal.Footer style={{ marginTop: "0.5rem" }}>
                       <Button
                         className="w-full"
                         onPress={() => {
