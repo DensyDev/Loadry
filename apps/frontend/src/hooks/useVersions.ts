@@ -1,4 +1,4 @@
-import type { Project } from "@densy/loadry-contracts";
+import type { Project, TagSelections } from "@densy/loadry-contracts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { downloads } from "../services/downloads";
@@ -32,6 +32,32 @@ function serializeFilter(values: string[]) {
   return normalizedValues.length > 0 ? normalizedValues.join(",") : null;
 }
 
+function parseTagFilter(value: string | null, project: Project): TagSelections {
+  const knownTags = new Set(
+    project.tagGroups.flatMap(group => group.values.map(tag => `${group.id}:${tag.id}`))
+  );
+  const selections: Record<string, string[]> = {};
+
+  for (const tag of value?.split(",") ?? []) {
+    const normalized = tag.trim();
+
+    if (!knownTags.has(normalized)) continue;
+    const separator = normalized.indexOf(":");
+    const group = normalized.slice(0, separator);
+    const tagValue = normalized.slice(separator + 1);
+    selections[group] = Array.from(new Set([...(selections[group] ?? []), tagValue]));
+  }
+
+  return selections;
+}
+
+function serializeTags(selections: TagSelections) {
+  const tags = Object.entries(selections)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([group, values]) => [...values].sort().map(value => `${group}:${value}`));
+  return tags.length ? tags.join(",") : null;
+}
+
 function readStoredPageSize() {
   const storedValue = window.localStorage.getItem(pageSizeStorageKey);
   const value = Number.parseInt(storedValue ?? "", 10);
@@ -49,6 +75,7 @@ export function useVersions(project: Project) {
   const [requestedPageSize, setRequestedPageSize] = useState(readStoredPageSize);
   const branchFilter = parseMultiValue(searchParams.get("branches")) as BranchFilter;
   const seriesFilter = parseMultiValue(searchParams.get("versions"));
+  const tagFilter = parseTagFilter(searchParams.get("tags"), project);
   const searchFilters: VersionSearchFilters = {
     modifiedFrom: searchParams.get("from") ?? "",
     modifiedTo: searchParams.get("to") ?? "",
@@ -59,10 +86,12 @@ export function useVersions(project: Project) {
   const page = parsePage(searchParams.get("page"));
   const serializedBranches = serializeFilter(branchFilter);
   const serializedVersions = serializeFilter(seriesFilter);
+  const serializedTags = serializeTags(tagFilter);
   const requestKey = [
     project.id,
     serializedBranches,
     serializedVersions,
+    serializedTags,
     searchFilters.query,
     searchFilters.modifiedFrom,
     searchFilters.modifiedTo,
@@ -84,6 +113,7 @@ export function useVersions(project: Project) {
         propertyKey: searchFilters.propertyKey || undefined,
         propertyValue: searchFilters.propertyValue || undefined,
         query: searchFilters.query || undefined,
+        tags: tagFilter,
         versions: serializedVersions?.split(","),
       }),
     }),
@@ -98,6 +128,7 @@ export function useVersions(project: Project) {
       searchFilters.propertyValue,
       searchFilters.query,
       serializedBranches,
+      serializedTags,
       serializedVersions,
     ]
   );
@@ -181,6 +212,18 @@ export function useVersions(project: Project) {
     });
   };
 
+  const setTagFilter = (value: TagSelections) => {
+    setSearchParams(current => {
+      const nextParams = new URLSearchParams(current);
+      const serializedValue = serializeTags(value);
+
+      if (serializedValue) nextParams.set("tags", serializedValue);
+      else nextParams.delete("tags");
+      nextParams.delete("page");
+      return nextParams;
+    });
+  };
+
   const setPageSize = (nextPageSize: number) => {
     window.localStorage.setItem(pageSizeStorageKey, String(nextPageSize));
     setRequestedPageSize(nextPageSize);
@@ -243,5 +286,7 @@ export function useVersions(project: Project) {
     setPageSize,
     setSearchFilters,
     setSeriesFilter: (value: string[]) => updateFilterParam("versions", value),
+    setTagFilter,
+    tagFilter,
   };
 }

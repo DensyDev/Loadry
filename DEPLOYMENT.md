@@ -25,6 +25,7 @@ is documented by `loadry.config.example.json`. Each project defines:
 - a unique ID;
 - a display name and description;
 - ordered forwarding domains;
+- optional tag groups used for build classification and filtering;
 - version provider instances.
 
 If the same domain is assigned more than once, the first matching project wins. The repository has
@@ -34,6 +35,80 @@ shows Lumi using Reposilite release, snapshot, and legacy providers.
 Loadry also includes standard Maven and manually configured static providers. Every provider has
 the common fields `type`, `id`, `label`, and `branch`. `branchLabel` defaults to
 `branches.<branch>`, while `showInAllBranches` defaults to `true`.
+
+### Build tags and resolvers
+
+Declare reusable tag groups on the project and attach `tagResolvers` to any provider. The backend
+evaluates them after a provider loads a build, so the same feature works for Reposilite, Maven,
+static, and future providers.
+
+```json
+{
+  "tagGroups": [
+    {
+      "id": "operating-system",
+      "label": "Operating system",
+      "values": [
+        { "id": "windows", "label": "Windows" },
+        { "id": "linux", "label": "Linux" }
+      ]
+    },
+    {
+      "id": "architecture",
+      "label": "Architecture",
+      "values": [
+        { "id": "x64", "label": "x64" },
+        { "id": "arm64", "label": "ARM64" }
+      ]
+    }
+  ],
+  "providers": [
+    {
+      "type": "maven",
+      "id": "releases",
+      "label": "Releases",
+      "branch": "stable",
+      "baseUrl": "https://repo.example.com/releases",
+      "groupId": "com.example",
+      "artifactId": "example",
+      "tagResolvers": [
+        {
+          "group": "operating-system",
+          "value": "windows",
+          "when": {
+            "any": [
+              { "field": "fileName", "operator": "matches", "value": "(?:win|windows)" },
+              { "field": "properties.os", "operator": "equals", "value": "windows" }
+            ]
+          }
+        },
+        {
+          "group": "architecture",
+          "value": "x64",
+          "when": {
+            "all": [
+              { "field": "fileName", "operator": "contains", "value": "x64" },
+              { "not": { "field": "fileName", "operator": "contains", "value": "arm64" } }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Atomic conditions support `equals`, `notEquals`, `contains`, `startsWith`, `endsWith`, `matches`,
+and `exists`. Comparisons and regular expressions are case-insensitive unless `caseSensitive` is
+`true`. Conditions compose recursively with `all`, `any`, and `not`. Supported fields include
+build IDs and versions, file/download/checksum URLs, branch and provider IDs/labels, series,
+modification time, source text/URL, Maven coordinates and repository fields, plus any exact
+`properties.<key>` path. Invalid regular expressions and references to undeclared tags are rejected
+when the configuration is loaded.
+
+Static entries may assign tags directly with
+`"tags": [{ "group": "operating-system", "value": "linux" }]`; resolver results are merged with
+those explicit tags and duplicates are removed.
 
 ### Reposilite provider
 

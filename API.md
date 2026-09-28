@@ -68,7 +68,8 @@ GET /api/v1/projects
 GET /api/v1/projects/{projectId}
 ```
 
-Projects contain public metadata, branches, forwarded domains, providers, and links.
+Projects contain public metadata, branches, tag group definitions, forwarded domains, providers,
+and links.
 
 SDK:
 
@@ -87,6 +88,7 @@ GET /api/v1/projects/{projectId}/versions
 | --- | --- |
 | `branches` | Branch IDs separated by commas or passed multiple times |
 | `versions` | Version series separated by commas or passed multiple times |
+| `tags` | Tag IDs as `group:value`, separated by commas or passed multiple times |
 | `limit` | Result count from `1` to `1000`; in paginated mode it is capped by the server setting |
 | `page` | Enables paginated output and selects a one-based page number |
 
@@ -97,11 +99,13 @@ GET /api/v1/projects/lumi/versions?branches=dev
 GET /api/v1/projects/lumi/versions?branches=stable,dev&versions=1.6,1.5
 GET /api/v1/projects/lumi/versions?branches=dev&versions=1.6&limit=1
 GET /api/v1/projects/lumi/versions?branches=dev&page=2
+GET /api/v1/projects/lumi/versions?tags=operating-system:windows,architecture:x64
 ```
 
 Without `branches`, the endpoint returns only entries configured for the all-branches view.
 Passing a branch explicitly also makes hidden branches available. Version responses can include
-provider-specific build metadata in `properties`.
+provider-specific build metadata in `properties` and resolved `tags`. Multiple values in one tag
+group are combined with OR; selections from different groups are combined with AND.
 
 Versions produced by Maven-compatible providers also contain a nullable `maven` object with the
 repository URL, group ID, artifact ID, logical version, extension, and optional classifier. The
@@ -122,6 +126,7 @@ SDK:
 ```ts
 await downloads.versions.list("lumi", {
   branches: ["stable", "dev"],
+  tags: { "operating-system": ["windows", "linux"], architecture: ["x64"] },
   versions: ["1.6"],
   limit: 20,
 });

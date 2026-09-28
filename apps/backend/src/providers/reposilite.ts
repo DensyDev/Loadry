@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Branch, VersionEntry, VersionProviderSource } from "../types.js";
 import { normalizeSeries } from "../versioning.js";
 import { defineProvider, providerBaseSchema } from "./definition.js";
+import type { TagResolver } from "./definition.js";
 import { buildSourceFromProperties, fetchTextOrNull, parseProperties } from "./support.js";
 
 export const reposiliteProviderConfigSchema = providerBaseSchema
@@ -79,6 +80,7 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
   readonly label: string;
   readonly repository: string;
   readonly showInAllBranches: boolean;
+  readonly tagResolvers: TagResolver[];
 
   constructor(options: ReposiliteProviderConfig) {
     this.artifactId = options.artifactId;
@@ -91,6 +93,7 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
     this.label = options.label;
     this.repository = options.repository;
     this.showInAllBranches = options.showInAllBranches ?? true;
+    this.tagResolvers = options.tagResolvers ?? [];
   }
 
   private get groupPath() {
@@ -192,6 +195,7 @@ export class ReposiliteVersionProviderSource implements VersionProviderSource {
       showInAllBranches: this.showInAllBranches,
       sourceText: source.sourceText,
       sourceUrl: source.sourceUrl,
+      tags: [],
       version: resolvedVersion,
     };
   }

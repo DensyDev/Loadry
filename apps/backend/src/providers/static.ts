@@ -1,7 +1,12 @@
 import { z } from "zod";
 import type { Branch, VersionEntry, VersionProviderSource } from "../types.js";
 import { normalizeSeries } from "../versioning.js";
-import { defineProvider, providerBaseSchema } from "./definition.js";
+import {
+  defineProvider,
+  providerBaseSchema,
+  versionTagSchema,
+  type TagResolver,
+} from "./definition.js";
 
 const staticEntrySchema = z
   .object({
@@ -15,6 +20,7 @@ const staticEntrySchema = z
     series: z.string().trim().min(1).optional(),
     sourceText: z.string().trim().min(1).nullable().optional(),
     sourceUrl: z.url().nullable().optional(),
+    tags: z.array(versionTagSchema).optional(),
     version: z.string().trim().min(1),
   })
   .strict();
@@ -62,6 +68,7 @@ export class StaticVersionProviderSource implements VersionProviderSource {
   readonly id: string;
   readonly label: string;
   readonly showInAllBranches: boolean;
+  readonly tagResolvers: TagResolver[];
   private readonly entries: VersionEntry[];
 
   constructor(options: StaticProviderConfig) {
@@ -70,6 +77,7 @@ export class StaticVersionProviderSource implements VersionProviderSource {
     this.id = options.id;
     this.label = options.label;
     this.showInAllBranches = options.showInAllBranches ?? true;
+    this.tagResolvers = options.tagResolvers ?? [];
     this.entries = options.entries.map(entry => {
       const logicalVersion = entry.logicalVersion ?? entry.version;
 
@@ -90,6 +98,7 @@ export class StaticVersionProviderSource implements VersionProviderSource {
         showInAllBranches: this.showInAllBranches,
         sourceText: entry.sourceText ?? null,
         sourceUrl: entry.sourceUrl ?? null,
+        tags: entry.tags ?? [],
         version: entry.version,
       };
     });
@@ -99,6 +108,7 @@ export class StaticVersionProviderSource implements VersionProviderSource {
     return this.entries.map(entry => ({
       ...entry,
       properties: entry.properties ? { ...entry.properties } : null,
+      tags: entry.tags.map(tag => ({ ...tag })),
     }));
   }
 }

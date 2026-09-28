@@ -13,6 +13,7 @@ test("static provider normalizes manually configured entries", async () => {
         fileName: "example-1.4.0.jar",
         modifiedAt: "2026-09-27T12:00:00.000Z",
         properties: { "git.commit.id": "abc123" },
+        tags: [{ group: "operating-system", value: "linux" }],
         version: "1.4.0",
       },
     ],
@@ -41,11 +42,14 @@ test("static provider normalizes manually configured entries", async () => {
     showInAllBranches: true,
     sourceText: null,
     sourceUrl: null,
+    tags: [{ group: "operating-system", value: "linux" }],
     version: "1.4.0",
   });
 
   entries[0]!.properties!["git.commit.id"] = "changed";
+  entries[0]!.tags[0]!.value = "changed";
   assert.equal((await provider.loadEntries())[0]?.properties?.["git.commit.id"], "abc123");
+  assert.equal((await provider.loadEntries())[0]?.tags[0]?.value, "linux");
 });
 
 test("maven provider loads releases and timestamped snapshots from metadata", async () => {

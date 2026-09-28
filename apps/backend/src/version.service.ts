@@ -1,4 +1,5 @@
-import type { VersionEntry, VersionProviderSource } from "./types.js";
+import type { VersionEntry, VersionProviderSource, VersionTag } from "./types.js";
+import { resolveTags } from "./tag-resolver.js";
 import { sortEntries } from "./versioning.js";
 
 type VersionCacheEntry = {
@@ -18,6 +19,7 @@ export type VersionFilters = {
   propertyKey?: string;
   propertyValue?: string;
   query?: string;
+  tags?: VersionTag[];
   versions?: string[];
 };
 
@@ -96,6 +98,7 @@ function searchableValues(entry: VersionEntry) {
     entry.sourceText,
     entry.sourceUrl,
     entry.modifiedAt === null ? null : normalizeTimestamp(entry.modifiedAt),
+    ...entry.tags.flatMap(tag => [tag.group, tag.value, `${tag.group}:${tag.value}`]),
     ...properties,
   ]
     .filter((value): value is string => typeof value === "string")
@@ -113,7 +116,14 @@ export class VersionService {
       return cached.promise;
     }
 
-    const promise = Promise.all(this.providers.map(provider => provider.loadEntries()))
+    const promise = Promise.all(
+      this.providers.map(async provider =>
+        (await provider.loadEntries()).map(entry => ({
+          ...entry,
+          tags: resolveTags(entry, provider.tagResolvers ?? []),
+        }))
+      )
+    )
       .then(result =>
         sortEntries(
           result.flat(),
@@ -142,7 +152,10 @@ export class VersionService {
     const branches = this.normalizeFilter(filters.branches);
     const versions = this.normalizeFilter(filters.versions);
     const filteredEntries = this.filterBySearchOptions(
-      this.filterByVersions(this.filterByBranches(entries, branches), versions),
+      this.filterByTags(
+        this.filterByVersions(this.filterByBranches(entries, branches), versions),
+        filters.tags ?? []
+      ),
       filters
     );
 
@@ -156,7 +169,7 @@ export class VersionService {
     const branchEntries = this.filterByBranches(entries, branches);
     const series = Array.from(new Set(branchEntries.map(entry => entry.series)));
     const filteredEntries = this.filterBySearchOptions(
-      this.filterByVersions(branchEntries, versions),
+      this.filterByTags(this.filterByVersions(branchEntries, versions), filters.tags ?? []),
       filters
     );
     const totalItems = filteredEntries.length;
@@ -205,6 +218,22 @@ export class VersionService {
   private filterByVersions(entries: VersionEntry[], versions: string[]) {
     return entries.filter(entry =>
       versions.length ? versions.includes(entry.series) : true
+    );
+  }
+
+  private filterByTags(entries: VersionEntry[], tags: VersionTag[]) {
+    const selections = new Map<string, Set<string>>();
+
+    for (const tag of tags) {
+      const values = selections.get(tag.group) ?? new Set<string>();
+      values.add(tag.value);
+      selections.set(tag.group, values);
+    }
+
+    return entries.filter(entry =>
+      Array.from(selections).every(([group, values]) =>
+        entry.tags.some(tag => tag.group === group && values.has(tag.value))
+      )
     );
   }
 

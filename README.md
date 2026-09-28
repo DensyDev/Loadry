@@ -53,6 +53,11 @@ Paginated version lists contain 50 builds by default. Set `LOADRY_VERSIONS_PAGE_
 from `1` to `1000` to change the server-controlled page size. The page-size control increments by
 5; set `LOADRY_VERSIONS_PAGE_SIZE_STEP` to another positive divisor of the page size to change it.
 
+Projects can define arbitrary build tag groups such as operating system and architecture.
+Provider-level resolvers derive tags from build fields, Maven metadata, properties, or regular
+expressions, and the website exposes them as nested faceted filters. See `DEPLOYMENT.md` for the
+configuration format.
+
 ## Validation
 
 ```bash

@@ -1,5 +1,6 @@
-import { ListBox, Select, Typography } from "@heroui/react";
-import { Check, ChevronDown } from "lucide-react";
+import type { TagGroup, TagSelections } from "@densy/loadry-contracts";
+import { Button, Dropdown, ListBox, Select, Typography } from "@heroui/react";
+import { Check, ChevronDown, Tags, X } from "lucide-react";
 import type { Key } from "react";
 import { useTranslation } from "react-i18next";
 import type { BranchFilter } from "../hooks/useVersions";
@@ -17,6 +18,9 @@ type VersionFiltersProps = {
   onSeriesChange: (value: string[]) => void;
   seriesFilter: string[];
   seriesOptions: Option[];
+  tagFilter: TagSelections;
+  tagGroups: TagGroup[];
+  onTagChange: (value: TagSelections) => void;
 };
 
 function toggleSelection(key: Key | null, previous: string[]) {
@@ -45,6 +49,9 @@ export function VersionFilters({
   onSeriesChange,
   seriesFilter,
   seriesOptions,
+  tagFilter,
+  tagGroups,
+  onTagChange,
 }: VersionFiltersProps) {
   const { t } = useTranslation();
 
@@ -74,6 +81,22 @@ export function VersionFilters({
     onSeriesChange(toggleSelection(key, seriesFilter));
   };
 
+  const selectedTagCount = Object.values(tagFilter).reduce(
+    (total, values) => total + values.length,
+    0
+  );
+
+  const updateTagGroup = (group: TagGroup, keys: "all" | Set<Key>) => {
+    const nextValues = keys === "all"
+      ? group.values.map(value => value.id)
+      : Array.from(keys).filter((key): key is string => typeof key === "string");
+    const next = { ...tagFilter };
+
+    if (nextValues.length) next[group.id] = nextValues;
+    else delete next[group.id];
+    onTagChange(next);
+  };
+
   const branchListBoxProps = {
     onAction: handleBranchChange,
     selectedKeys: new Set(branchFilter),
@@ -87,7 +110,7 @@ export function VersionFilters({
   } as any;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className={`grid grid-cols-2 gap-4 ${tagGroups.length ? "md:grid-cols-3" : ""}`}>
       <div className="space-y-2">
         <Typography.Paragraph className="text-sm font-medium text-muted">
           {t("filters.branch")}
@@ -167,6 +190,86 @@ export function VersionFilters({
           </Select.Popover>
         </Select>
       </div>
+
+      {tagGroups.length > 0 && (
+        <div className="col-span-2 space-y-2 md:col-span-1">
+          <Typography.Paragraph className="text-sm font-medium text-muted">
+            {t("filters.tags", { defaultValue: "Tags" })}
+          </Typography.Paragraph>
+          <Dropdown>
+            <Dropdown.Trigger className="w-full">
+              <Button className="w-full justify-between" variant="secondary">
+                <span className="flex min-w-0 items-center gap-2">
+                  <Tags aria-hidden="true" className="shrink-0" size={16} />
+                  <span className="truncate text-left">
+                    {selectedTagCount
+                      ? t("filters.selectedTags", {
+                          count: selectedTagCount,
+                          defaultValue: `Tags (${selectedTagCount})`,
+                        })
+                      : t("filters.allTags", { defaultValue: "All tags" })}
+                  </span>
+                </span>
+                <ChevronDown aria-hidden="true" className="shrink-0" size={16} />
+              </Button>
+            </Dropdown.Trigger>
+            <Dropdown.Popover>
+              <Dropdown.Menu aria-label={t("filters.tags", { defaultValue: "Tags" })}>
+                {selectedTagCount > 0 && (
+                  <Dropdown.Item
+                    id="clear-tags"
+                    onAction={() => onTagChange({})}
+                    textValue={t("filters.clearTags", { defaultValue: "Clear tags" })}
+                  >
+                    <span className="flex items-center gap-2 text-danger">
+                      <X aria-hidden="true" size={16} />
+                      {t("filters.clearTags", { defaultValue: "Clear tags" })}
+                    </span>
+                  </Dropdown.Item>
+                )}
+                {tagGroups.map(group => (
+                  <Dropdown.SubmenuTrigger key={group.id}>
+                    <Dropdown.Item id={`group:${group.id}`} textValue={group.label}>
+                      <span className="flex w-full items-center justify-between gap-4">
+                        <span>{group.label}</span>
+                        <span className="flex items-center gap-2 text-muted">
+                          {(tagFilter[group.id]?.length ?? 0) > 0 && (
+                            <span>{tagFilter[group.id]?.length}</span>
+                          )}
+                          <Dropdown.SubmenuIndicator />
+                        </span>
+                      </span>
+                    </Dropdown.Item>
+                    <Dropdown.Popover>
+                      <Dropdown.Menu
+                        aria-label={group.label}
+                        onSelectionChange={keys => updateTagGroup(group, keys)}
+                        selectedKeys={new Set(tagFilter[group.id] ?? [])}
+                        selectionMode="multiple"
+                      >
+                        {group.values.map(tag => (
+                          <Dropdown.Item
+                            id={tag.id}
+                            key={tag.id}
+                            textValue={tag.label}
+                          >
+                            <span className="flex w-full items-center justify-between gap-4">
+                              <span>{tag.label}</span>
+                              {tagFilter[group.id]?.includes(tag.id) && (
+                                <Check aria-hidden="true" size={16} />
+                              )}
+                            </span>
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown.Popover>
+                  </Dropdown.SubmenuTrigger>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
+        </div>
+      )}
     </div>
   );
 }

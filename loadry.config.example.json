@@ -29,6 +29,16 @@
       "name": "Reposilite Example",
       "description": "Example of downloads from the Reposilite repository",
       "domains": [],
+      "tagGroups": [
+        {
+          "id": "release-kind",
+          "label": "Release kind",
+          "values": [
+            { "id": "release", "label": "Release" },
+            { "id": "snapshot", "label": "Snapshot" }
+          ]
+        }
+      ],
       "providers": [
         {
           "type": "reposilite",
@@ -40,7 +50,14 @@
           "baseUrl": "https://repo.reposilite.com",
           "repository": "releases",
           "groupId": "com.reposilite",
-          "artifactId": "reposilite"
+          "artifactId": "reposilite",
+          "tagResolvers": [
+            {
+              "group": "release-kind",
+              "value": "release",
+              "when": { "field": "branch.id", "operator": "equals", "value": "stable" }
+            }
+          ]
         },
         {
           "type": "reposilite",
@@ -52,7 +69,14 @@
           "baseUrl": "https://repo.reposilite.com",
           "repository": "snapshots",
           "groupId": "com.reposilite",
-          "artifactId": "reposilite"
+          "artifactId": "reposilite",
+          "tagResolvers": [
+            {
+              "group": "release-kind",
+              "value": "snapshot",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-SNAPSHOT" }
+            }
+          ]
         }
       ]
     },

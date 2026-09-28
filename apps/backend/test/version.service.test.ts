@@ -21,6 +21,7 @@ function entry(id: string, branch: string, series: string, showInAllBranches = t
     showInAllBranches,
     sourceText: null,
     sourceUrl: null,
+    tags: [],
     version: id,
   };
 }
@@ -33,6 +34,7 @@ function provider(entries: VersionEntry[]): VersionProviderSource {
     label: "Test",
     loadEntries: async () => entries,
     showInAllBranches: true,
+    tagResolvers: [],
   };
 }
 
@@ -145,6 +147,61 @@ test("paginate filters entries by modified date range", async () => {
   );
 
   assert.deepEqual(result.items.map(item => item.id), ["newer"]);
+});
+
+test("tag resolvers support nested conditions and faceted filtering", async () => {
+  const windowsX64 = {
+    ...entry("windows-x64", "stable", "1.0"),
+    fileName: "example-windows-x64.jar",
+    properties: { arch: "x64" },
+  };
+  const linuxArm = {
+    ...entry("linux-arm64", "stable", "1.0"),
+    fileName: "example-linux-arm64.jar",
+    properties: { arch: "arm64" },
+  };
+  const source = provider([windowsX64, linuxArm]);
+  source.tagResolvers.push(
+    {
+      group: "operating-system",
+      value: "windows",
+      when: { field: "fileName", operator: "matches", value: "windows", caseSensitive: false },
+    },
+    {
+      group: "operating-system",
+      value: "linux",
+      when: { field: "fileName", operator: "contains", value: "linux", caseSensitive: false },
+    },
+    {
+      group: "architecture",
+      value: "x64",
+      when: {
+        all: [
+          { field: "properties.arch", operator: "equals", value: "x64", caseSensitive: false },
+          { not: { field: "fileName", operator: "contains", value: "arm", caseSensitive: false } },
+        ],
+      },
+    }
+  );
+  const service = new VersionService([source]);
+
+  const result = await service.paginate(
+    {
+      tags: [
+        { group: "operating-system", value: "windows" },
+        { group: "operating-system", value: "linux" },
+        { group: "architecture", value: "x64" },
+      ],
+    },
+    1,
+    50
+  );
+
+  assert.deepEqual(result.items.map(item => item.id), ["windows-x64"]);
+  assert.deepEqual(result.items[0]?.tags, [
+    { group: "operating-system", value: "windows" },
+    { group: "architecture", value: "x64" },
+  ]);
 });
 
 test("version entries are reused between page requests", async () => {

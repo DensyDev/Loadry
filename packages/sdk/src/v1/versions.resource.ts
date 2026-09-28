@@ -19,6 +19,7 @@ export class VersionsResource {
   list(projectId: string, filters: ListVersionsOptions = {}, options: RequestOptions = {}) {
     const query = new URLSearchParams();
     appendList(query, "branches", filters.branches);
+    appendTags(query, filters.tags);
     appendList(query, "versions", filters.versions);
     appendSearchFilters(query, filters);
 
@@ -40,6 +41,7 @@ export class VersionsResource {
   ) {
     const query = new URLSearchParams({ page: String(filters.page ?? 1) });
     appendList(query, "branches", filters.branches);
+    appendTags(query, filters.tags);
     appendList(query, "versions", filters.versions);
     appendSearchFilters(query, filters);
 
@@ -73,6 +75,16 @@ function appendList(query: URLSearchParams, key: string, values?: readonly strin
   if (values?.length) {
     query.set(key, values.join(","));
   }
+}
+
+function appendTags(
+  query: URLSearchParams,
+  selections?: Readonly<Record<string, readonly string[]>>
+) {
+  const tags = Object.entries(selections ?? {}).flatMap(([group, values]) =>
+    values.map(value => `${group}:${value}`)
+  );
+  appendList(query, "tags", tags);
 }
 
 function appendSearchFilters(
