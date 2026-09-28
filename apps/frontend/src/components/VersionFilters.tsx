@@ -18,6 +18,7 @@ type VersionFiltersProps = {
   onSeriesChange: (value: string[]) => void;
   seriesFilter: string[];
   seriesOptions: Option[];
+  showBranchFilter: boolean;
   tagFilter: TagSelections;
   tagGroups: TagGroup[];
   onTagChange: (value: TagSelections) => void;
@@ -49,6 +50,7 @@ export function VersionFilters({
   onSeriesChange,
   seriesFilter,
   seriesOptions,
+  showBranchFilter,
   tagFilter,
   tagGroups,
   onTagChange,
@@ -109,48 +111,58 @@ export function VersionFilters({
     selectionMode: "multiple",
   } as any;
 
+  const gridClassName = tagGroups.length
+    ? showBranchFilter
+      ? "grid-cols-2 md:grid-cols-3"
+      : "grid-cols-1 md:grid-cols-2"
+    : showBranchFilter
+      ? "grid-cols-2"
+      : "grid-cols-1";
+
   return (
-    <div className={`grid grid-cols-2 gap-4 ${tagGroups.length ? "md:grid-cols-3" : ""}`}>
-      <div className="space-y-2">
-        <Typography.Paragraph className="text-sm font-medium text-muted">
-          {t("filters.branch")}
-        </Typography.Paragraph>
-        <Select
-          key={branchFilter.join("|")}
-          placeholder={t("filters.branch")}
-          variant="secondary"
-        >
-          <Select.Trigger>
-            <span className="truncate text-left">{branchValueLabel}</span>
-            <Select.Indicator>
-              <ChevronDown aria-hidden="true" size={16} />
-            </Select.Indicator>
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox {...branchListBoxProps}>
-              {branchOptions.map(option => (
-                <ListBox.Item
-                  id={option.id}
-                  key={option.id}
-                  textValue={option.id}
-                  {...({ onPress: () => handleBranchChange(option.id) } as any)}
-                >
-                  <span className="flex w-full items-center justify-between gap-3">
-                    <span>
-                      {option.labelKey
-                        ? t(option.labelKey, { defaultValue: option.label ?? option.id })
-                        : option.label ?? option.id}
+    <div className={`grid gap-4 ${gridClassName}`}>
+      {showBranchFilter && (
+        <div className="space-y-2">
+          <Typography.Paragraph className="text-sm font-medium text-muted">
+            {t("filters.branch")}
+          </Typography.Paragraph>
+          <Select
+            key={branchFilter.join("|")}
+            placeholder={t("filters.branch")}
+            variant="secondary"
+          >
+            <Select.Trigger>
+              <span className="truncate text-left">{branchValueLabel}</span>
+              <Select.Indicator>
+                <ChevronDown aria-hidden="true" size={16} />
+              </Select.Indicator>
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox {...branchListBoxProps}>
+                {branchOptions.map(option => (
+                  <ListBox.Item
+                    id={option.id}
+                    key={option.id}
+                    textValue={option.id}
+                    {...({ onPress: () => handleBranchChange(option.id) } as any)}
+                  >
+                    <span className="flex w-full items-center justify-between gap-3">
+                      <span>
+                        {option.labelKey
+                          ? t(option.labelKey, { defaultValue: option.label ?? option.id })
+                          : option.label ?? option.id}
+                      </span>
+                      {branchFilter.includes(option.id as BranchFilter[number]) && (
+                        <Check aria-hidden="true" size={16} />
+                      )}
                     </span>
-                    {branchFilter.includes(option.id as BranchFilter[number]) && (
-                      <Check aria-hidden="true" size={16} />
-                    )}
-                  </span>
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
-      </div>
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Typography.Paragraph className="text-sm font-medium text-muted">
@@ -192,7 +204,9 @@ export function VersionFilters({
       </div>
 
       {tagGroups.length > 0 && (
-        <div className="col-span-2 space-y-2 md:col-span-1">
+        <div
+          className={showBranchFilter ? "col-span-2 space-y-2 md:col-span-1" : "space-y-2"}
+        >
           <Typography.Paragraph className="text-sm font-medium text-muted">
             {t("filters.tags", { defaultValue: "Tags" })}
           </Typography.Paragraph>

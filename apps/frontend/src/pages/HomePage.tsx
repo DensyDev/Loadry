@@ -64,6 +64,7 @@ export function HomePage({ project }: HomePageProps) {
             onTagChange={setTagFilter}
             seriesFilter={seriesFilter}
             seriesOptions={seriesOptions}
+            showBranchFilter={project.branches.length > 1}
             tagFilter={tagFilter}
             tagGroups={project.tagGroups}
           />

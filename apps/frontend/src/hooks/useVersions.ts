@@ -73,7 +73,11 @@ export function useVersions(project: Project) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reloadToken, setReloadToken] = useState(0);
   const [requestedPageSize, setRequestedPageSize] = useState(readStoredPageSize);
-  const branchFilter = parseMultiValue(searchParams.get("branches")) as BranchFilter;
+  const branchFilter = (
+    project.branches.length === 1
+      ? [project.branches[0]!.id]
+      : parseMultiValue(searchParams.get("branches"))
+  ) as BranchFilter;
   const seriesFilter = parseMultiValue(searchParams.get("versions"));
   const tagFilter = parseTagFilter(searchParams.get("tags"), project);
   const searchFilters: VersionSearchFilters = {
