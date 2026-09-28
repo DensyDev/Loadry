@@ -1,7 +1,7 @@
 import type { TagGroup, TagSelections } from "@densy/loadry-contracts";
-import { Button, Dropdown, ListBox, Select, Typography } from "@heroui/react";
+import { Dropdown, ListBox, Select, Typography } from "@heroui/react";
 import { Check, ChevronDown, Tags, X } from "lucide-react";
-import type { Key } from "react";
+import { useEffect, useRef, useState, type Key } from "react";
 import { useTranslation } from "react-i18next";
 import type { BranchFilter } from "../hooks/useVersions";
 
@@ -56,6 +56,24 @@ export function VersionFilters({
   onTagChange,
 }: VersionFiltersProps) {
   const { t } = useTranslation();
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
+  const [tagMenuColumnWidth, setTagMenuColumnWidth] = useState<number | null>(null);
+  const tagTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const trigger = tagTriggerRef.current;
+
+    if (!trigger) return;
+
+    const updateColumnWidth = () => {
+      setTagMenuColumnWidth(trigger.getBoundingClientRect().width / 2);
+    };
+    const resizeObserver = new ResizeObserver(updateColumnWidth);
+    updateColumnWidth();
+    resizeObserver.observe(trigger);
+
+    return () => resizeObserver.disconnect();
+  }, [tagGroups.length, showBranchFilter]);
 
   const branchValueLabel = branchFilter.includes("all")
     ? t("filters.allBranches")
@@ -205,29 +223,42 @@ export function VersionFilters({
 
       {tagGroups.length > 0 && (
         <div
-          className={showBranchFilter ? "col-span-2 space-y-2 md:col-span-1" : "space-y-2"}
+          className={`${showBranchFilter ? "col-span-2 md:col-span-1" : ""} select--secondary space-y-2`}
         >
           <Typography.Paragraph className="text-sm font-medium text-muted">
             {t("filters.tags", { defaultValue: "Tags" })}
           </Typography.Paragraph>
-          <Dropdown>
-            <Dropdown.Trigger className="w-full">
-              <Button className="w-full justify-between" variant="secondary">
-                <span className="flex min-w-0 items-center gap-2">
-                  <Tags aria-hidden="true" className="shrink-0" size={16} />
-                  <span className="truncate text-left">
-                    {selectedTagCount
-                      ? t("filters.selectedTags", {
-                          count: selectedTagCount,
-                          defaultValue: `Tags (${selectedTagCount})`,
-                        })
-                      : t("filters.allTags", { defaultValue: "All tags" })}
-                  </span>
+          <Dropdown isOpen={isTagDropdownOpen} onOpenChange={setIsTagDropdownOpen}>
+            <Dropdown.Trigger
+              className="select__trigger select__trigger--full-width"
+              ref={tagTriggerRef}
+              style={{ color: "var(--accent-soft-foreground)", transform: "none" }}
+            >
+              <span className="select__value flex min-w-0 items-center gap-2">
+                <Tags aria-hidden="true" className="shrink-0" size={16} />
+                <span className="truncate text-left">
+                  {selectedTagCount
+                    ? t("filters.selectedTags", {
+                        count: selectedTagCount,
+                        defaultValue: `Tags (${selectedTagCount})`,
+                      })
+                    : t("filters.allTags", { defaultValue: "All tags" })}
                 </span>
-                <ChevronDown aria-hidden="true" className="shrink-0" size={16} />
-              </Button>
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className="select__indicator"
+                data-open={isTagDropdownOpen ? "true" : undefined}
+                size={16}
+              />
             </Dropdown.Trigger>
-            <Dropdown.Popover>
+            <Dropdown.Popover
+              style={tagMenuColumnWidth === null ? undefined : {
+                maxWidth: "none",
+                minWidth: tagMenuColumnWidth,
+                width: tagMenuColumnWidth,
+              }}
+            >
               <Dropdown.Menu aria-label={t("filters.tags", { defaultValue: "Tags" })}>
                 {selectedTagCount > 0 && (
                   <Dropdown.Item
@@ -254,7 +285,13 @@ export function VersionFilters({
                         </span>
                       </span>
                     </Dropdown.Item>
-                    <Dropdown.Popover>
+                    <Dropdown.Popover
+                      style={tagMenuColumnWidth === null ? undefined : {
+                        maxWidth: "none",
+                        minWidth: tagMenuColumnWidth,
+                        width: tagMenuColumnWidth,
+                      }}
+                    >
                       <Dropdown.Menu
                         aria-label={group.label}
                         onSelectionChange={keys => updateTagGroup(group, keys)}
