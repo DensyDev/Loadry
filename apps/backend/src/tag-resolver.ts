@@ -1,4 +1,5 @@
 import type { TagCondition, TagResolver } from "./providers/definition.js";
+import { compareTagValue } from "./tag-operators.js";
 import type { VersionEntry, VersionTag } from "./types.js";
 
 function normalizedTimestamp(timestamp: number) {
@@ -68,34 +69,12 @@ function matchesCondition(
     return !matchesCondition(context, condition.not);
   }
 
-  const actual = readField(context, condition.field);
-
-  if (condition.operator === "exists") {
-    return actual !== null;
-  }
-
-  if (actual === null) {
-    return condition.operator === "notEquals";
-  }
-
-  const expected = condition.value ?? "";
-  const comparableActual = condition.caseSensitive ? actual : actual.toLocaleLowerCase();
-  const comparableExpected = condition.caseSensitive ? expected : expected.toLocaleLowerCase();
-
-  switch (condition.operator) {
-    case "contains":
-      return comparableActual.includes(comparableExpected);
-    case "endsWith":
-      return comparableActual.endsWith(comparableExpected);
-    case "equals":
-      return comparableActual === comparableExpected;
-    case "matches":
-      return new RegExp(expected, condition.caseSensitive ? "" : "i").test(actual);
-    case "notEquals":
-      return comparableActual !== comparableExpected;
-    case "startsWith":
-      return comparableActual.startsWith(comparableExpected);
-  }
+  return compareTagValue(
+    readField(context, condition.field),
+    condition.operator,
+    condition.value,
+    condition.caseSensitive
+  );
 }
 
 export function matchesTagCondition(entry: VersionEntry, condition: TagCondition): boolean {

@@ -1,5 +1,9 @@
 import { z } from "zod";
 import type { VersionProviderSource } from "../types.js";
+import {
+  tagComparisonOperators,
+  validateTagComparisonValue,
+} from "../tag-operators.js";
 
 export const identifierSchema = z
   .string()
@@ -20,49 +24,23 @@ const tagComparisonSchema = z
   .object({
     caseSensitive: z.boolean().default(false),
     field: tagConditionFieldSchema,
-    operator: z.enum([
-      "contains",
-      "endsWith",
-      "equals",
-      "exists",
-      "matches",
-      "notEquals",
-      "startsWith",
-    ]),
-    value: z.string().optional(),
+    operator: z.enum(tagComparisonOperators),
+    value: z.union([z.string(), z.number().finite()]).optional(),
   })
   .strict()
   .superRefine((condition, context) => {
-    if (condition.operator === "exists") {
-      if (condition.value !== undefined) {
-        context.addIssue({
-          code: "custom",
-          message: "The exists operator does not accept a value",
-          path: ["value"],
-        });
-      }
-      return;
-    }
+    const error = validateTagComparisonValue(
+      condition.operator,
+      condition.value,
+      condition.caseSensitive
+    );
 
-    if (condition.value === undefined) {
+    if (error) {
       context.addIssue({
         code: "custom",
-        message: `The ${condition.operator} operator requires a value`,
+        message: error,
         path: ["value"],
       });
-      return;
-    }
-
-    if (condition.operator === "matches") {
-      try {
-        new RegExp(condition.value, condition.caseSensitive ? "" : "i");
-      } catch {
-        context.addIssue({
-          code: "custom",
-          message: "Invalid regular expression",
-          path: ["value"],
-        });
-      }
     }
   });
 

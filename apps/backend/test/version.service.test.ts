@@ -153,12 +153,14 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
   const windowsX64 = {
     ...entry("windows-x64", "stable", "1.0"),
     fileName: "example-windows-x64.jar",
-    properties: { "app.platform": "desktop", arch: "x64" },
+    modifiedAt: Date.parse("2026-09-01T12:00:00Z"),
+    properties: { "app.platform": "desktop", arch: "x64", "build.number": "42" },
   };
   const linuxArm = {
     ...entry("linux-arm64", "stable", "1.0"),
     fileName: "example-linux-arm64.jar",
-    properties: { arch: "arm64" },
+    modifiedAt: Date.parse("2025-09-01T12:00:00Z") / 1000,
+    properties: { arch: "arm64", "build.number": "12" },
   };
   const source = provider([windowsX64, linuxArm]);
   source.tagResolvers.push(
@@ -191,6 +193,26 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
         value: "desktop",
         caseSensitive: false,
       },
+    },
+    {
+      group: "build-size",
+      value: "large",
+      when: {
+        field: "properties.build.number",
+        operator: "greaterThanOrEqual",
+        value: 40,
+        caseSensitive: false,
+      },
+    },
+    {
+      group: "freshness",
+      value: "recent",
+      when: {
+        field: "modifiedAt",
+        operator: "after",
+        value: "2026-01-01T00:00:00Z",
+        caseSensitive: false,
+      },
     }
   );
   const service = new VersionService([source]);
@@ -201,6 +223,8 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
         { group: "operating-system", value: "windows" },
         { group: "operating-system", value: "linux" },
         { group: "architecture", value: "x64" },
+        { group: "build-size", value: "large" },
+        { group: "freshness", value: "recent" },
       ],
     },
     1,
@@ -212,6 +236,8 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
     { group: "operating-system", value: "windows" },
     { group: "architecture", value: "x64" },
     { group: "application", value: "desktop" },
+    { group: "build-size", value: "large" },
+    { group: "freshness", value: "recent" },
   ]);
 });
 

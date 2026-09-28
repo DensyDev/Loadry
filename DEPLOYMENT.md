@@ -99,14 +99,24 @@ static, and future providers.
 ```
 
 Atomic conditions support `equals`, `notEquals`, `contains`, `startsWith`, `endsWith`, `matches`,
-and `exists`. Comparisons and regular expressions are case-insensitive unless `caseSensitive` is
-`true`. Conditions compose recursively with `all`, `any`, and `not`. The `field` value is a dynamic
+and `exists`. Numeric fields can use `lessThan`, `lessThanOrEqual`, `greaterThan`, and
+`greaterThanOrEqual`. Timestamp fields can use `before`, `beforeOrAt`, `after`, and `afterOrAt`;
+their values may be ISO 8601 strings or Unix timestamps in seconds or milliseconds. Comparisons
+and regular expressions are case-insensitive unless `caseSensitive` is `true`. Conditions compose
+recursively with `all`, `any`, and `not`. The `field` value is a dynamic
 dot-separated path into the build context, so adding a new scalar build field does not require a
 resolver code change. Common paths include `fileName`, `logicalVersion`, `branch.id`,
 `provider.id`, `source.text`, and `maven.repository.url`. Arbitrary property names are supported as
 exact paths: a property named `app.platform` is addressed as `properties.app.platform`, including
 the dot inside the property key. Invalid paths, regular expressions, and references to undeclared
 tags are rejected when the configuration is loaded.
+
+```json
+[
+  { "field": "properties.build.number", "operator": "greaterThanOrEqual", "value": 100 },
+  { "field": "modifiedAt", "operator": "after", "value": "2026-01-01T00:00:00Z" }
+]
+```
 
 Static entries may assign tags directly with
 `"tags": [{ "group": "operating-system", "value": "linux" }]`; resolver results are merged with

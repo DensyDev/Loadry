@@ -104,6 +104,16 @@
       "name": "Maven Google Guava Example",
       "description": "Example of downloads from the Maven repository for the Google Guava package",
       "domains": [],
+      "tagGroups": [
+        {
+          "id": "variant",
+          "label": "Variant",
+          "values": [
+            { "id": "jre", "label": "JRE" },
+            { "id": "android", "label": "Android" }
+          ]
+        }
+      ],
       "providers": [
         {
           "type": "maven",
@@ -114,7 +124,19 @@
           "groupId": "com.google.guava",
           "artifactId": "guava",
           "extension": "jar",
-          "classifier": null
+          "classifier": null,
+          "tagResolvers": [
+            {
+              "group": "variant",
+              "value": "jre",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-jre" }
+            },
+            {
+              "group": "variant",
+              "value": "android",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-android" }
+            }
+          ]
         }
       ]
     }
