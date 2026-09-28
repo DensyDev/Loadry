@@ -1,5 +1,13 @@
 import type { TagGroup, TagSelections } from "@densy/loadry-contracts";
-import { Dropdown, ListBox, Select, Typography } from "@heroui/react";
+import {
+  Button,
+  Dropdown,
+  ListBox,
+  Modal,
+  Select,
+  Typography,
+  useOverlayState,
+} from "@heroui/react";
 import { Check, ChevronDown, Tags, X } from "lucide-react";
 import { useEffect, useRef, useState, type Key } from "react";
 import { useTranslation } from "react-i18next";
@@ -56,6 +64,9 @@ export function VersionFilters({
   onTagChange,
 }: VersionFiltersProps) {
   const { t } = useTranslation();
+  const branchModal = useOverlayState();
+  const seriesModal = useOverlayState();
+  const tagsModal = useOverlayState();
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [tagMenuColumnWidth, setTagMenuColumnWidth] = useState<number | null>(null);
   const tagTriggerRef = useRef<HTMLButtonElement>(null);
@@ -117,6 +128,14 @@ export function VersionFilters({
     onTagChange(next);
   };
 
+  const toggleTagValue = (group: TagGroup, value: string) => {
+    const selectedKeys = new Set(tagFilter[group.id] ?? []);
+
+    if (selectedKeys.has(value)) selectedKeys.delete(value);
+    else selectedKeys.add(value);
+    updateTagGroup(group, selectedKeys);
+  };
+
   const branchListBoxProps = {
     onAction: handleBranchChange,
     selectedKeys: new Set(branchFilter),
@@ -144,41 +163,88 @@ export function VersionFilters({
           <Typography.Paragraph className="text-sm font-medium text-muted">
             {t("filters.branch")}
           </Typography.Paragraph>
-          <Select
-            key={branchFilter.join("|")}
-            placeholder={t("filters.branch")}
-            variant="secondary"
-          >
-            <Select.Trigger>
-              <span className="truncate text-left">{branchValueLabel}</span>
-              <Select.Indicator>
-                <ChevronDown aria-hidden="true" size={16} />
-              </Select.Indicator>
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox {...branchListBoxProps}>
-                {branchOptions.map(option => (
-                  <ListBox.Item
-                    id={option.id}
-                    key={option.id}
-                    textValue={option.id}
-                    {...({ onPress: () => handleBranchChange(option.id) } as any)}
-                  >
-                    <span className="flex w-full items-center justify-between gap-3">
-                      <span>
-                        {option.labelKey
-                          ? t(option.labelKey, { defaultValue: option.label ?? option.id })
-                          : option.label ?? option.id}
+          <div className="hidden sm:block">
+            <Select
+              key={branchFilter.join("|")}
+              placeholder={t("filters.branch")}
+              variant="secondary"
+            >
+              <Select.Trigger>
+                <span className="truncate text-left">{branchValueLabel}</span>
+                <Select.Indicator>
+                  <ChevronDown aria-hidden="true" size={16} />
+                </Select.Indicator>
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox {...branchListBoxProps}>
+                  {branchOptions.map(option => (
+                    <ListBox.Item
+                      id={option.id}
+                      key={option.id}
+                      textValue={option.id}
+                      {...({ onPress: () => handleBranchChange(option.id) } as any)}
+                    >
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span>
+                          {option.labelKey
+                            ? t(option.labelKey, { defaultValue: option.label ?? option.id })
+                            : option.label ?? option.id}
+                        </span>
+                        {branchFilter.includes(option.id as BranchFilter[number]) && (
+                          <Check aria-hidden="true" size={16} />
+                        )}
                       </span>
-                      {branchFilter.includes(option.id as BranchFilter[number]) && (
-                        <Check aria-hidden="true" size={16} />
-                      )}
-                    </span>
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
+          </div>
+          <div className="sm:hidden">
+            <Modal state={branchModal}>
+              <Button className="w-full justify-between rounded-field px-3" variant="secondary">
+                <span className="truncate text-left">{branchValueLabel}</span>
+                <ChevronDown aria-hidden="true" size={16} />
+              </Button>
+              <Modal.Backdrop>
+                <Modal.Container placement="bottom" size="sm">
+                  <Modal.Dialog className="max-h-[85dvh]">
+                    <Modal.CloseTrigger />
+                    <Modal.Header>
+                      <Modal.Heading>{t("filters.branch")}</Modal.Heading>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <div className="flex flex-col gap-2">
+                        {branchOptions.map(option => {
+                          const isSelected = branchFilter.includes(
+                            option.id as BranchFilter[number]
+                          );
+
+                          return (
+                            <Button
+                              className="w-full justify-between px-3"
+                              key={option.id}
+                              onPress={() => handleBranchChange(option.id)}
+                              variant={isSelected ? "secondary" : "tertiary"}
+                            >
+                              <span className="text-left">
+                                {option.labelKey
+                                  ? t(option.labelKey, {
+                                      defaultValue: option.label ?? option.id,
+                                    })
+                                  : option.label ?? option.id}
+                              </span>
+                              {isSelected && <Check aria-hidden="true" size={18} />}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </Modal.Body>
+                  </Modal.Dialog>
+                </Modal.Container>
+              </Modal.Backdrop>
+            </Modal>
+          </div>
         </div>
       )}
 
@@ -186,39 +252,82 @@ export function VersionFilters({
         <Typography.Paragraph className="text-sm font-medium text-muted">
           {t("filters.version")}
         </Typography.Paragraph>
-        <Select
-          key={seriesFilter.join("|")}
-          placeholder={t("filters.version")}
-          variant="secondary"
-        >
-          <Select.Trigger>
-            <span className="truncate text-left">{seriesValueLabel}</span>
-            <Select.Indicator>
-              <ChevronDown aria-hidden="true" size={16} />
-            </Select.Indicator>
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox {...seriesListBoxProps}>
-              {seriesOptions.map(option => (
-                <ListBox.Item
-                  id={option.id}
-                  key={option.id}
-                  textValue={option.id}
-                  {...({ onPress: () => handleSeriesChange(option.id) } as any)}
-                >
-                  <span className="flex w-full items-center justify-between gap-3">
-                    <span>
-                      {option.id === "all"
-                        ? t("filters.allVersions")
-                        : option.label ?? option.id}
+        <div className="hidden sm:block">
+          <Select
+            key={seriesFilter.join("|")}
+            placeholder={t("filters.version")}
+            variant="secondary"
+          >
+            <Select.Trigger>
+              <span className="truncate text-left">{seriesValueLabel}</span>
+              <Select.Indicator>
+                <ChevronDown aria-hidden="true" size={16} />
+              </Select.Indicator>
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox {...seriesListBoxProps}>
+                {seriesOptions.map(option => (
+                  <ListBox.Item
+                    id={option.id}
+                    key={option.id}
+                    textValue={option.id}
+                    {...({ onPress: () => handleSeriesChange(option.id) } as any)}
+                  >
+                    <span className="flex w-full items-center justify-between gap-3">
+                      <span>
+                        {option.id === "all"
+                          ? t("filters.allVersions")
+                          : option.label ?? option.id}
+                      </span>
+                      {seriesFilter.includes(option.id) && <Check aria-hidden="true" size={16} />}
                     </span>
-                    {seriesFilter.includes(option.id) && <Check aria-hidden="true" size={16} />}
-                  </span>
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </div>
+        <div className="sm:hidden">
+          <Modal state={seriesModal}>
+            <Button className="w-full justify-between rounded-field px-3" variant="secondary">
+              <span className="truncate text-left">{seriesValueLabel}</span>
+              <ChevronDown aria-hidden="true" size={16} />
+            </Button>
+            <Modal.Backdrop>
+              <Modal.Container placement="bottom" size="sm">
+                <Modal.Dialog className="max-h-[85dvh]">
+                  <Modal.CloseTrigger />
+                  <Modal.Header>
+                    <Modal.Heading>{t("filters.version")}</Modal.Heading>
+                  </Modal.Header>
+                  <Modal.Body>
+                    <div className="flex flex-col gap-2">
+                      {seriesOptions.map(option => {
+                        const isSelected = seriesFilter.includes(option.id);
+
+                        return (
+                          <Button
+                            className="w-full justify-between px-3"
+                            key={option.id}
+                            onPress={() => handleSeriesChange(option.id)}
+                            variant={isSelected ? "secondary" : "tertiary"}
+                          >
+                            <span className="text-left">
+                              {option.id === "all"
+                                ? t("filters.allVersions")
+                                : option.label ?? option.id}
+                            </span>
+                            {isSelected && <Check aria-hidden="true" size={18} />}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </Modal.Body>
+                </Modal.Dialog>
+              </Modal.Container>
+            </Modal.Backdrop>
+          </Modal>
+        </div>
       </div>
 
       {tagGroups.length > 0 && (
@@ -228,6 +337,7 @@ export function VersionFilters({
           <Typography.Paragraph className="text-sm font-medium text-muted">
             {t("filters.tags", { defaultValue: "Tags" })}
           </Typography.Paragraph>
+          <div className="hidden sm:block">
           <Dropdown isOpen={isTagDropdownOpen} onOpenChange={setIsTagDropdownOpen}>
             <Dropdown.Trigger
               className="select__trigger select__trigger--full-width"
@@ -319,6 +429,79 @@ export function VersionFilters({
               </Dropdown.Menu>
             </Dropdown.Popover>
           </Dropdown>
+          </div>
+          <div className="sm:hidden">
+            <Modal state={tagsModal}>
+              <Button
+                className="w-full justify-between rounded-field px-3"
+                style={{ color: "var(--accent-soft-foreground)" }}
+                variant="secondary"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Tags aria-hidden="true" className="shrink-0" size={16} />
+                  <span className="truncate text-left">
+                    {selectedTagCount
+                      ? t("filters.selectedTags", {
+                          count: selectedTagCount,
+                          defaultValue: `Tags (${selectedTagCount})`,
+                        })
+                      : t("filters.allTags", { defaultValue: "All tags" })}
+                  </span>
+                </span>
+                <ChevronDown aria-hidden="true" size={16} />
+              </Button>
+              <Modal.Backdrop>
+                <Modal.Container placement="bottom" size="sm">
+                  <Modal.Dialog className="max-h-[85dvh]">
+                    <Modal.CloseTrigger />
+                    <Modal.Header>
+                      <Modal.Heading>
+                        {t("filters.tags", { defaultValue: "Tags" })}
+                      </Modal.Heading>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <div className="space-y-3">
+                        {tagGroups.map(group => (
+                          <section className="rounded-2xl border border-default-200 p-2" key={group.id}>
+                            <Typography.Paragraph className="px-2 pb-1 text-sm font-semibold">
+                              {group.label}
+                            </Typography.Paragraph>
+                            <div className="flex flex-col gap-1">
+                              {group.values.map(tag => {
+                                const isSelected = tagFilter[group.id]?.includes(tag.id) === true;
+
+                                return (
+                                  <Button
+                                    className="w-full justify-between px-3"
+                                    key={tag.id}
+                                    onPress={() => toggleTagValue(group, tag.id)}
+                                    variant={isSelected ? "secondary" : "tertiary"}
+                                  >
+                                    <span className="text-left">{tag.label}</span>
+                                    {isSelected && <Check aria-hidden="true" size={18} />}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </section>
+                        ))}
+                        {selectedTagCount > 0 && (
+                          <Button
+                            className="w-full"
+                            onPress={() => onTagChange({})}
+                            variant="danger-soft"
+                          >
+                            <X aria-hidden="true" size={18} />
+                            {t("filters.clearTags", { defaultValue: "Clear tags" })}
+                          </Button>
+                        )}
+                      </div>
+                    </Modal.Body>
+                  </Modal.Dialog>
+                </Modal.Container>
+              </Modal.Backdrop>
+            </Modal>
+          </div>
         </div>
       )}
     </div>
