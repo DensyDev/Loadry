@@ -10,6 +10,7 @@ import type { Version } from "@densy/loadry-contracts";
 import { RefreshCcw, ServerCrash } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { branchLabelFallback } from "../utils/branch";
 import { resolveLocale } from "../locales/helpers";
 import { DownloadSplitButton } from "./DownloadSplitButton";
 
@@ -119,7 +120,9 @@ export function VersionsTable({
                 </Table.Cell>
                 <Table.Cell>
                   <Chip size="sm" variant="soft">
-                    {t(entry.branch.labelKey, { defaultValue: entry.branch.id })}
+                    {t(entry.branch.labelKey, {
+                      defaultValue: branchLabelFallback(entry.branch),
+                    })}
                   </Chip>
                 </Table.Cell>
                 <Table.Cell>

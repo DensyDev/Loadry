@@ -2,6 +2,7 @@ import type { Project, TagSelections } from "@densy/loadry-contracts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { downloads } from "../services/downloads";
+import { branchLabelFallback } from "../utils/branch";
 import { sortSeries } from "../utils/versioning";
 import { useAsync } from "./useAsync";
 
@@ -169,7 +170,7 @@ export function useVersions(project: Project) {
       { id: "all", labelKey: "filters.allBranches" },
       ...project.branches.map(branch => ({
         id: branch.id,
-        label: branch.id,
+        label: branchLabelFallback(branch),
         labelKey: branch.labelKey,
       })),
     ],
