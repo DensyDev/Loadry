@@ -6,53 +6,69 @@ function normalizedTimestamp(timestamp: number) {
   return new Date(milliseconds).toISOString();
 }
 
-function readField(entry: VersionEntry, field: string): string | null {
-  if (field.startsWith("properties.")) {
-    return entry.properties?.[field.slice("properties.".length)] ?? null;
-  }
-
-  const fields: Record<string, string | number | boolean | null | undefined> = {
-    "branch.id": entry.branch,
-    "branch.label": entry.branchLabel,
-    checksumUrl: entry.checksumUrl,
-    downloadUrl: entry.downloadUrl,
-    fileName: entry.fileName,
-    id: entry.id,
-    logicalVersion: entry.logicalVersion,
-    "maven.artifactId": entry.maven?.artifactId,
-    "maven.classifier": entry.maven?.classifier,
-    "maven.extension": entry.maven?.extension,
-    "maven.groupId": entry.maven?.groupId,
-    "maven.repository.id": entry.maven?.repository.id,
-    "maven.repository.name": entry.maven?.repository.name,
-    "maven.repository.url": entry.maven?.repository.url,
-    "maven.version": entry.maven?.version,
+function buildResolverContext(entry: VersionEntry): Record<string, unknown> {
+  return {
+    ...entry,
+    branch: { id: entry.branch, label: entry.branchLabel },
     modifiedAt: entry.modifiedAt === null ? null : normalizedTimestamp(entry.modifiedAt),
-    "provider.id": entry.providerId,
-    "provider.label": entry.providerLabel,
-    series: entry.series,
-    "source.text": entry.sourceText,
-    "source.url": entry.sourceUrl,
-    version: entry.version,
+    provider: { id: entry.providerId, label: entry.providerLabel },
+    source: { text: entry.sourceText, url: entry.sourceUrl },
   };
-  const value = fields[field];
-  return value === null || value === undefined ? null : String(value);
 }
 
-export function matchesTagCondition(entry: VersionEntry, condition: TagCondition): boolean {
+function readPathValue(root: Record<string, unknown>, path: string): unknown {
+  const segments = path.split(".");
+  let current: unknown = root;
+
+  for (let index = 0; index < segments.length; index += 1) {
+    if (typeof current !== "object" || current === null || Array.isArray(current)) {
+      return null;
+    }
+
+    const object = current as Record<string, unknown>;
+    const remainingPath = segments.slice(index).join(".");
+
+    // Property maps and provider-specific objects may use dots inside an exact key.
+    if (Object.hasOwn(object, remainingPath)) {
+      return object[remainingPath];
+    }
+
+    const segment = segments[index]!;
+
+    if (!Object.hasOwn(object, segment)) {
+      return null;
+    }
+
+    current = object[segment];
+  }
+
+  return current;
+}
+
+function readField(context: Record<string, unknown>, field: string): string | null {
+  const value = readPathValue(context, field);
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+    ? String(value)
+    : null;
+}
+
+function matchesCondition(
+  context: Record<string, unknown>,
+  condition: TagCondition
+): boolean {
   if ("all" in condition) {
-    return condition.all.every(child => matchesTagCondition(entry, child));
+    return condition.all.every(child => matchesCondition(context, child));
   }
 
   if ("any" in condition) {
-    return condition.any.some(child => matchesTagCondition(entry, child));
+    return condition.any.some(child => matchesCondition(context, child));
   }
 
   if ("not" in condition) {
-    return !matchesTagCondition(entry, condition.not);
+    return !matchesCondition(context, condition.not);
   }
 
-  const actual = readField(entry, condition.field);
+  const actual = readField(context, condition.field);
 
   if (condition.operator === "exists") {
     return actual !== null;
@@ -82,11 +98,16 @@ export function matchesTagCondition(entry: VersionEntry, condition: TagCondition
   }
 }
 
+export function matchesTagCondition(entry: VersionEntry, condition: TagCondition): boolean {
+  return matchesCondition(buildResolverContext(entry), condition);
+}
+
 export function resolveTags(entry: VersionEntry, resolvers: TagResolver[]): VersionTag[] {
   const tags = new Map((entry.tags ?? []).map(tag => [`${tag.group}:${tag.value}`, tag]));
+  const context = buildResolverContext(entry);
 
   for (const resolver of resolvers) {
-    if (matchesTagCondition(entry, resolver.when)) {
+    if (matchesCondition(context, resolver.when)) {
       const tag = { group: resolver.group, value: resolver.value };
       tags.set(`${tag.group}:${tag.value}`, tag);
     }

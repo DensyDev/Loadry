@@ -173,7 +173,7 @@ test("tag resolvers must reference declared project tags", async () => {
       {
         group: "operating-system",
         value: "linux",
-        when: { field: "fileName", operator: "matches", value: "linux" },
+        when: { field: "properties.app.platform", operator: "matches", value: "linux" },
       },
     ],
   });

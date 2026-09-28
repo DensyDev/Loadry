@@ -100,11 +100,13 @@ static, and future providers.
 
 Atomic conditions support `equals`, `notEquals`, `contains`, `startsWith`, `endsWith`, `matches`,
 and `exists`. Comparisons and regular expressions are case-insensitive unless `caseSensitive` is
-`true`. Conditions compose recursively with `all`, `any`, and `not`. Supported fields include
-build IDs and versions, file/download/checksum URLs, branch and provider IDs/labels, series,
-modification time, source text/URL, Maven coordinates and repository fields, plus any exact
-`properties.<key>` path. Invalid regular expressions and references to undeclared tags are rejected
-when the configuration is loaded.
+`true`. Conditions compose recursively with `all`, `any`, and `not`. The `field` value is a dynamic
+dot-separated path into the build context, so adding a new scalar build field does not require a
+resolver code change. Common paths include `fileName`, `logicalVersion`, `branch.id`,
+`provider.id`, `source.text`, and `maven.repository.url`. Arbitrary property names are supported as
+exact paths: a property named `app.platform` is addressed as `properties.app.platform`, including
+the dot inside the property key. Invalid paths, regular expressions, and references to undeclared
+tags are rejected when the configuration is loaded.
 
 Static entries may assign tags directly with
 `"tags": [{ "group": "operating-system", "value": "linux" }]`; resolver results are merged with

@@ -153,7 +153,7 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
   const windowsX64 = {
     ...entry("windows-x64", "stable", "1.0"),
     fileName: "example-windows-x64.jar",
-    properties: { arch: "x64" },
+    properties: { "app.platform": "desktop", arch: "x64" },
   };
   const linuxArm = {
     ...entry("linux-arm64", "stable", "1.0"),
@@ -181,6 +181,16 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
           { not: { field: "fileName", operator: "contains", value: "arm", caseSensitive: false } },
         ],
       },
+    },
+    {
+      group: "application",
+      value: "desktop",
+      when: {
+        field: "properties.app.platform",
+        operator: "equals",
+        value: "desktop",
+        caseSensitive: false,
+      },
     }
   );
   const service = new VersionService([source]);
@@ -201,6 +211,7 @@ test("tag resolvers support nested conditions and faceted filtering", async () =
   assert.deepEqual(result.items[0]?.tags, [
     { group: "operating-system", value: "windows" },
     { group: "architecture", value: "x64" },
+    { group: "application", value: "desktop" },
   ]);
 });
 

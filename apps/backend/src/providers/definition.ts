@@ -11,34 +11,9 @@ const tagConditionFieldSchema = z
   .string()
   .trim()
   .min(1)
-  .refine(
-    field =>
-      [
-        "branch.id",
-        "branch.label",
-        "checksumUrl",
-        "downloadUrl",
-        "fileName",
-        "id",
-        "logicalVersion",
-        "maven.artifactId",
-        "maven.classifier",
-        "maven.extension",
-        "maven.groupId",
-        "maven.repository.id",
-        "maven.repository.name",
-        "maven.repository.url",
-        "maven.version",
-        "modifiedAt",
-        "provider.id",
-        "provider.label",
-        "series",
-        "source.text",
-        "source.url",
-        "version",
-      ].includes(field) ||
-      field.startsWith("properties.") && field.length > "properties.".length,
-    "Unsupported tag resolver field"
+  .regex(
+    /^[a-z_][a-z0-9_-]*(?:\.[a-z0-9_-]+)*$/i,
+    "Must be a dot-separated field path"
   );
 
 const tagComparisonSchema = z
