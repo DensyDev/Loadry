@@ -3,6 +3,8 @@
 Loadry is a self-hostable download platform for projects with configurable build providers. It is
 developed by [Densy](https://github.com/densydev).
 
+![Loadry Preview](/.github/preview.png)
+
 The repository is an npm workspace monorepo:
 
 - `apps/frontend` — React, Vite, and HeroUI website
