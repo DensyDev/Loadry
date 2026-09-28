@@ -13,6 +13,17 @@ export const providerSchema = z.object({
   label: z.string(),
 });
 
+export const tagSchema = z.object({
+  group: z.string(),
+  value: z.string(),
+});
+
+export const tagGroupSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  values: z.array(z.object({ id: z.string(), label: z.string() })),
+});
+
 export const localizedTextSchema = z.union([
   z.string(),
   z.record(z.string(), z.string()),
@@ -58,6 +69,7 @@ export const projectSchema = z.object({
   }),
   name: z.string(),
   providers: z.array(providerSchema),
+  tagGroups: z.array(tagGroupSchema).default([]),
 });
 
 export const catalogSchema = z.object({
@@ -103,6 +115,7 @@ export const versionSchema = z.object({
       url: z.url().nullable(),
     })
     .nullable(),
+  tags: z.array(tagSchema).default([]),
   version: z.string(),
 });
 
@@ -156,6 +169,8 @@ export type Provider = z.infer<typeof providerSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type SiteLinkIcon = z.infer<typeof siteLinkIconSchema>;
+export type Tag = z.infer<typeof tagSchema>;
+export type TagGroup = z.infer<typeof tagGroupSchema>;
 export type Version = z.infer<typeof versionSchema>;
 export type VersionPage = z.infer<typeof versionPageSchema>;
 export type VersionLookupResult = z.infer<typeof versionLookupResultSchema>;
@@ -169,9 +184,12 @@ export type VersionSearchOptions = {
   query?: string;
 };
 
+export type TagSelections = Readonly<Record<string, readonly string[]>>;
+
 export type ListVersionsOptions = VersionSearchOptions & {
   branches?: readonly string[];
   limit?: number;
+  tags?: TagSelections;
   versions?: readonly string[];
 };
 
@@ -179,6 +197,7 @@ export type ListVersionPageOptions = VersionSearchOptions & {
   branches?: readonly string[];
   limit?: number;
   page?: number;
+  tags?: TagSelections;
   versions?: readonly string[];
 };
 

@@ -29,30 +29,54 @@
       "name": "Reposilite Example",
       "description": "Example of downloads from the Reposilite repository",
       "domains": [],
+      "tagGroups": [
+        {
+          "id": "release-kind",
+          "label": "Release kind",
+          "values": [
+            { "id": "release", "label": "Release" },
+            { "id": "snapshot", "label": "Snapshot" }
+          ]
+        }
+      ],
       "providers": [
         {
           "type": "reposilite",
-          "id": "stable-releases",
-          "label": "Stable / Releases",
-          "branch": "stable",
-          "branchLabel": "branches.stable",
+          "id": "releases",
+          "label": "Releases",
+          "branch": "releases",
+          "branchLabel": "Releases",
           "showInAllBranches": true,
           "baseUrl": "https://repo.reposilite.com",
           "repository": "releases",
           "groupId": "com.reposilite",
-          "artifactId": "reposilite"
+          "artifactId": "reposilite",
+          "tagResolvers": [
+            {
+              "group": "release-kind",
+              "value": "release",
+              "when": { "field": "branch.id", "operator": "equals", "value": "stable" }
+            }
+          ]
         },
         {
           "type": "reposilite",
-          "id": "dev-snapshots",
-          "label": "Dev / Snapshots",
-          "branch": "dev",
-          "branchLabel": "branches.dev",
+          "id": "snapshots",
+          "label": "Snapshots",
+          "branch": "snapshots",
+          "branchLabel": "Snapshots",
           "showInAllBranches": true,
           "baseUrl": "https://repo.reposilite.com",
           "repository": "snapshots",
           "groupId": "com.reposilite",
-          "artifactId": "reposilite"
+          "artifactId": "reposilite",
+          "tagResolvers": [
+            {
+              "group": "release-kind",
+              "value": "snapshot",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-SNAPSHOT" }
+            }
+          ]
         }
       ]
     },
@@ -80,6 +104,16 @@
       "name": "Maven Google Guava Example",
       "description": "Example of downloads from the Maven repository for the Google Guava package",
       "domains": [],
+      "tagGroups": [
+        {
+          "id": "variant",
+          "label": "Variant",
+          "values": [
+            { "id": "jre", "label": "JRE" },
+            { "id": "android", "label": "Android" }
+          ]
+        }
+      ],
       "providers": [
         {
           "type": "maven",
@@ -90,7 +124,19 @@
           "groupId": "com.google.guava",
           "artifactId": "guava",
           "extension": "jar",
-          "classifier": null
+          "classifier": null,
+          "tagResolvers": [
+            {
+              "group": "variant",
+              "value": "jre",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-jre" }
+            },
+            {
+              "group": "variant",
+              "value": "android",
+              "when": { "field": "logicalVersion", "operator": "endsWith", "value": "-android" }
+            }
+          ]
         }
       ]
     }

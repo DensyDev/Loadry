@@ -1,4 +1,5 @@
-import type { VersionEntry, VersionProviderSource } from "./types.js";
+import type { VersionEntry, VersionProviderSource, VersionTag } from "./types.js";
+import { resolveTags } from "./tag-resolver.js";
 import { sortEntries } from "./versioning.js";
 
 type VersionCacheEntry = {
@@ -8,6 +9,7 @@ type VersionCacheEntry = {
 
 const versionCache = new WeakMap<VersionProviderSource[], VersionCacheEntry>();
 const versionCacheTtlMilliseconds = 30_000;
+const versionCacheRetryMilliseconds = 5_000;
 
 export type VersionFilters = {
   branches?: string[];
@@ -18,6 +20,7 @@ export type VersionFilters = {
   propertyKey?: string;
   propertyValue?: string;
   query?: string;
+  tags?: VersionTag[];
   versions?: string[];
 };
 
@@ -96,6 +99,7 @@ function searchableValues(entry: VersionEntry) {
     entry.sourceText,
     entry.sourceUrl,
     entry.modifiedAt === null ? null : normalizeTimestamp(entry.modifiedAt),
+    ...entry.tags.flatMap(tag => [tag.group, tag.value, `${tag.group}:${tag.value}`]),
     ...properties,
   ]
     .filter((value): value is string => typeof value === "string")
@@ -113,28 +117,58 @@ export class VersionService {
       return cached.promise;
     }
 
-    const promise = Promise.all(this.providers.map(provider => provider.loadEntries()))
+    const stalePromise = cached?.promise;
+    const refreshPromise = Promise.all(
+      this.providers.map(async provider =>
+        (await provider.loadEntries()).map(entry => ({
+          ...entry,
+          tags: resolveTags(entry, provider.tagResolvers ?? []),
+        }))
+      )
+    )
       .then(result =>
         sortEntries(
           result.flat(),
           this.providers.map(provider => provider.branch)
         )
       );
-    const cacheEntry = {
-      expiresAt: Date.now() + versionCacheTtlMilliseconds,
+    let cacheEntry: VersionCacheEntry;
+    const promise = refreshPromise
+      .then(entries => {
+        if (versionCache.get(this.providers) === cacheEntry) {
+          cacheEntry.expiresAt = Date.now() + versionCacheTtlMilliseconds;
+        }
+
+        return entries;
+      })
+      .catch(async error => {
+        if (stalePromise) {
+          try {
+            const entries = await stalePromise;
+
+            if (versionCache.get(this.providers) === cacheEntry) {
+              cacheEntry.expiresAt = Date.now() + versionCacheRetryMilliseconds;
+            }
+
+            return entries;
+          } catch {
+            // The previous request did not produce usable data either.
+          }
+        }
+
+        if (versionCache.get(this.providers) === cacheEntry) {
+          versionCache.delete(this.providers);
+        }
+
+        throw error;
+      });
+    cacheEntry = {
+      // Keep concurrent requests on the same promise even when loading takes longer than the TTL.
+      expiresAt: Number.POSITIVE_INFINITY,
       promise,
     };
     versionCache.set(this.providers, cacheEntry);
-
-    try {
-      return await promise;
-    } catch (error) {
-      if (versionCache.get(this.providers) === cacheEntry) {
-        versionCache.delete(this.providers);
-      }
-
-      throw error;
-    }
+    return promise;
   }
 
   async load(filters: VersionFilters = {}) {
@@ -142,7 +176,10 @@ export class VersionService {
     const branches = this.normalizeFilter(filters.branches);
     const versions = this.normalizeFilter(filters.versions);
     const filteredEntries = this.filterBySearchOptions(
-      this.filterByVersions(this.filterByBranches(entries, branches), versions),
+      this.filterByTags(
+        this.filterByVersions(this.filterByBranches(entries, branches), versions),
+        filters.tags ?? []
+      ),
       filters
     );
 
@@ -156,7 +193,7 @@ export class VersionService {
     const branchEntries = this.filterByBranches(entries, branches);
     const series = Array.from(new Set(branchEntries.map(entry => entry.series)));
     const filteredEntries = this.filterBySearchOptions(
-      this.filterByVersions(branchEntries, versions),
+      this.filterByTags(this.filterByVersions(branchEntries, versions), filters.tags ?? []),
       filters
     );
     const totalItems = filteredEntries.length;
@@ -205,6 +242,22 @@ export class VersionService {
   private filterByVersions(entries: VersionEntry[], versions: string[]) {
     return entries.filter(entry =>
       versions.length ? versions.includes(entry.series) : true
+    );
+  }
+
+  private filterByTags(entries: VersionEntry[], tags: VersionTag[]) {
+    const selections = new Map<string, Set<string>>();
+
+    for (const tag of tags) {
+      const values = selections.get(tag.group) ?? new Set<string>();
+      values.add(tag.value);
+      selections.set(tag.group, values);
+    }
+
+    return entries.filter(entry =>
+      Array.from(selections).every(([group, values]) =>
+        entry.tags.some(tag => tag.group === group && values.has(tag.value))
+      )
     );
   }
 

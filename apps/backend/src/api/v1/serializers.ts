@@ -52,6 +52,7 @@ export function serializeProject(project: DownloadProject, origin: string): Proj
       id: provider.id,
       label: provider.label,
     })),
+    tagGroups: project.tagGroups,
   };
 }
 
@@ -89,6 +90,7 @@ export function serializeVersion(
             url: entry.sourceUrl,
           }
         : null,
+    tags: entry.tags,
     version: entry.version,
   };
 }

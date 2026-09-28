@@ -34,6 +34,8 @@ export function HomePage({ project }: HomePageProps) {
     setPageSize,
     setSearchFilters,
     setSeriesFilter,
+    setTagFilter,
+    tagFilter,
   } = useVersions(project);
 
   const selectProject = (projectId: string) => {
@@ -59,8 +61,12 @@ export function HomePage({ project }: HomePageProps) {
             branchOptions={branchOptions}
             onBranchChange={setBranchFilter}
             onSeriesChange={setSeriesFilter}
+            onTagChange={setTagFilter}
             seriesFilter={seriesFilter}
             seriesOptions={seriesOptions}
+            showBranchFilter={project.branches.length > 1}
+            tagFilter={tagFilter}
+            tagGroups={project.tagGroups}
           />
           <VersionsTable
             entries={entries}

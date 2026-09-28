@@ -156,3 +156,28 @@ test("unregistered provider types are rejected with their config path", async ()
     /projects\.0\.providers\.0\.type: Unsupported provider type: unknown/
   );
 });
+
+test("tag resolvers must reference declared project tags", async () => {
+  const config = structuredClone(projectConfig);
+  Object.assign(config.projects[0]!, {
+    tagGroups: [
+      {
+        id: "operating-system",
+        label: "Operating system",
+        values: [{ id: "windows", label: "Windows" }],
+      },
+    ],
+  });
+  Object.assign(config.projects[0]!.providers[0]!, {
+    tagResolvers: [
+      {
+        group: "operating-system",
+        value: "linux",
+        when: { field: "properties.app.platform", operator: "matches", value: "linux" },
+      },
+    ],
+  });
+  const catalog = new ProjectCatalog({ LOADRY_CONFIG_JSON: JSON.stringify(config) });
+
+  await assert.rejects(catalog.getService(), /Unknown tag referenced by resolver/);
+});

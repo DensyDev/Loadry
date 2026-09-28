@@ -20,6 +20,18 @@ function parseList(value: unknown) {
 
 const filterListSchema = z.preprocess(parseList, z.array(z.string()));
 
+const tagFilterSchema = z
+  .preprocess(
+    parseList,
+    z.array(z.string().regex(/^[a-z0-9][a-z0-9._-]*:[a-z0-9][a-z0-9._-]*$/i))
+  )
+  .transform(tags =>
+    tags.map(tag => {
+      const separator = tag.indexOf(":");
+      return { group: tag.slice(0, separator), value: tag.slice(separator + 1) };
+    })
+  );
+
 const limitSchema = z.preprocess(
   value => (Array.isArray(value) ? value[0] : value),
   z.coerce.number().int().min(1).max(1000).optional()
@@ -55,6 +67,7 @@ export const versionsQuerySchema = z.object({
   propertyKey: optionalTextSchema(200),
   propertyValue: optionalTextSchema(500),
   query: optionalTextSchema(200),
+  tags: tagFilterSchema,
   versions: filterListSchema,
 });
 

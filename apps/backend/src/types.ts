@@ -1,3 +1,5 @@
+import type { TagResolver } from "./providers/definition.js";
+
 export type Branch = string;
 
 export type DownloadProject = {
@@ -6,6 +8,23 @@ export type DownloadProject = {
   id: string;
   name: string;
   providers: VersionProviderSource[];
+  tagGroups: TagGroup[];
+};
+
+export type TagGroup = {
+  id: string;
+  label: string;
+  values: TagValue[];
+};
+
+export type TagValue = {
+  id: string;
+  label: string;
+};
+
+export type VersionTag = {
+  group: string;
+  value: string;
 };
 
 export type MavenArtifact = {
@@ -38,6 +57,7 @@ export type VersionEntry = {
   showInAllBranches: boolean;
   sourceText: string | null;
   sourceUrl: string | null;
+  tags: VersionTag[];
   version: string;
 };
 
@@ -47,5 +67,6 @@ export interface VersionProviderSource {
   readonly id: string;
   readonly label: string;
   readonly showInAllBranches: boolean;
+  readonly tagResolvers: TagResolver[];
   loadEntries(): Promise<VersionEntry[]>;
 }

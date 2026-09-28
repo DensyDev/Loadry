@@ -1,7 +1,8 @@
-import type { Project } from "@densy/loadry-contracts";
+import type { Project, TagSelections } from "@densy/loadry-contracts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { downloads } from "../services/downloads";
+import { branchLabelFallback } from "../utils/branch";
 import { sortSeries } from "../utils/versioning";
 import { useAsync } from "./useAsync";
 
@@ -32,6 +33,32 @@ function serializeFilter(values: string[]) {
   return normalizedValues.length > 0 ? normalizedValues.join(",") : null;
 }
 
+function parseTagFilter(value: string | null, project: Project): TagSelections {
+  const knownTags = new Set(
+    project.tagGroups.flatMap(group => group.values.map(tag => `${group.id}:${tag.id}`))
+  );
+  const selections: Record<string, string[]> = {};
+
+  for (const tag of value?.split(",") ?? []) {
+    const normalized = tag.trim();
+
+    if (!knownTags.has(normalized)) continue;
+    const separator = normalized.indexOf(":");
+    const group = normalized.slice(0, separator);
+    const tagValue = normalized.slice(separator + 1);
+    selections[group] = Array.from(new Set([...(selections[group] ?? []), tagValue]));
+  }
+
+  return selections;
+}
+
+function serializeTags(selections: TagSelections) {
+  const tags = Object.entries(selections)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([group, values]) => [...values].sort().map(value => `${group}:${value}`));
+  return tags.length ? tags.join(",") : null;
+}
+
 function readStoredPageSize() {
   const storedValue = window.localStorage.getItem(pageSizeStorageKey);
   const value = Number.parseInt(storedValue ?? "", 10);
@@ -47,8 +74,13 @@ export function useVersions(project: Project) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reloadToken, setReloadToken] = useState(0);
   const [requestedPageSize, setRequestedPageSize] = useState(readStoredPageSize);
-  const branchFilter = parseMultiValue(searchParams.get("branches")) as BranchFilter;
+  const branchFilter = (
+    project.branches.length === 1
+      ? [project.branches[0]!.id]
+      : parseMultiValue(searchParams.get("branches"))
+  ) as BranchFilter;
   const seriesFilter = parseMultiValue(searchParams.get("versions"));
+  const tagFilter = parseTagFilter(searchParams.get("tags"), project);
   const searchFilters: VersionSearchFilters = {
     modifiedFrom: searchParams.get("from") ?? "",
     modifiedTo: searchParams.get("to") ?? "",
@@ -59,10 +91,12 @@ export function useVersions(project: Project) {
   const page = parsePage(searchParams.get("page"));
   const serializedBranches = serializeFilter(branchFilter);
   const serializedVersions = serializeFilter(seriesFilter);
+  const serializedTags = serializeTags(tagFilter);
   const requestKey = [
     project.id,
     serializedBranches,
     serializedVersions,
+    serializedTags,
     searchFilters.query,
     searchFilters.modifiedFrom,
     searchFilters.modifiedTo,
@@ -74,6 +108,7 @@ export function useVersions(project: Project) {
 
   const loadEntries = useCallback(
     async () => ({
+      projectId: project.id,
       requestKey,
       value: await downloads.versions.page(project.id, {
         branches: serializedBranches?.split(","),
@@ -84,6 +119,7 @@ export function useVersions(project: Project) {
         propertyKey: searchFilters.propertyKey || undefined,
         propertyValue: searchFilters.propertyValue || undefined,
         query: searchFilters.query || undefined,
+        tags: tagFilter,
         versions: serializedVersions?.split(","),
       }),
     }),
@@ -98,6 +134,7 @@ export function useVersions(project: Project) {
       searchFilters.propertyValue,
       searchFilters.query,
       serializedBranches,
+      serializedTags,
       serializedVersions,
     ]
   );
@@ -105,6 +142,8 @@ export function useVersions(project: Project) {
   const asyncState = useAsync(loadEntries, [loadEntries, reloadToken]);
   const data =
     asyncState.data?.requestKey === requestKey ? asyncState.data.value : null;
+  const latestProjectData =
+    data ?? (asyncState.data?.projectId === project.id ? asyncState.data.value : null);
   const hasCurrentData = data !== null;
   const isLoading = asyncState.isLoading || !hasCurrentData;
   const { error } = asyncState;
@@ -134,7 +173,7 @@ export function useVersions(project: Project) {
       { id: "all", labelKey: "filters.allBranches" },
       ...project.branches.map(branch => ({
         id: branch.id,
-        label: branch.id,
+        label: branchLabelFallback(branch),
         labelKey: branch.labelKey,
       })),
     ],
@@ -144,12 +183,12 @@ export function useVersions(project: Project) {
   const seriesOptions = useMemo(
     () => [
       { id: "all", label: null },
-      ...sortSeries(data?.series ?? []).map(series => ({ id: series, label: series })),
+      ...sortSeries(latestProjectData?.series ?? []).map(series => ({ id: series, label: series })),
     ],
-    [data?.series]
+    [latestProjectData?.series]
   );
   const propertyKeys =
-    data?.propertyKeys ?? asyncState.data?.value.propertyKeys ?? [];
+    latestProjectData?.propertyKeys ?? [];
 
   const updateFilterParam = (key: string, values: string[]) => {
     setSearchParams(current => {
@@ -177,6 +216,18 @@ export function useVersions(project: Project) {
         nextParams.set("page", String(nextPage));
       }
 
+      return nextParams;
+    });
+  };
+
+  const setTagFilter = (value: TagSelections) => {
+    setSearchParams(current => {
+      const nextParams = new URLSearchParams(current);
+      const serializedValue = serializeTags(value);
+
+      if (serializedValue) nextParams.set("tags", serializedValue);
+      else nextParams.delete("tags");
+      nextParams.delete("page");
       return nextParams;
     });
   };
@@ -243,5 +294,7 @@ export function useVersions(project: Project) {
     setPageSize,
     setSearchFilters,
     setSeriesFilter: (value: string[]) => updateFilterParam("versions", value),
+    setTagFilter,
+    tagFilter,
   };
 }

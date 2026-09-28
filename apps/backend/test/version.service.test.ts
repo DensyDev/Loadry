@@ -21,6 +21,7 @@ function entry(id: string, branch: string, series: string, showInAllBranches = t
     showInAllBranches,
     sourceText: null,
     sourceUrl: null,
+    tags: [],
     version: id,
   };
 }
@@ -33,6 +34,7 @@ function provider(entries: VersionEntry[]): VersionProviderSource {
     label: "Test",
     loadEntries: async () => entries,
     showInAllBranches: true,
+    tagResolvers: [],
   };
 }
 
@@ -147,6 +149,98 @@ test("paginate filters entries by modified date range", async () => {
   assert.deepEqual(result.items.map(item => item.id), ["newer"]);
 });
 
+test("tag resolvers support nested conditions and faceted filtering", async () => {
+  const windowsX64 = {
+    ...entry("windows-x64", "stable", "1.0"),
+    fileName: "example-windows-x64.jar",
+    modifiedAt: Date.parse("2026-09-01T12:00:00Z"),
+    properties: { "app.platform": "desktop", arch: "x64", "build.number": "42" },
+  };
+  const linuxArm = {
+    ...entry("linux-arm64", "stable", "1.0"),
+    fileName: "example-linux-arm64.jar",
+    modifiedAt: Date.parse("2025-09-01T12:00:00Z") / 1000,
+    properties: { arch: "arm64", "build.number": "12" },
+  };
+  const source = provider([windowsX64, linuxArm]);
+  source.tagResolvers.push(
+    {
+      group: "operating-system",
+      value: "windows",
+      when: { field: "fileName", operator: "matches", value: "windows", caseSensitive: false },
+    },
+    {
+      group: "operating-system",
+      value: "linux",
+      when: { field: "fileName", operator: "contains", value: "linux", caseSensitive: false },
+    },
+    {
+      group: "architecture",
+      value: "x64",
+      when: {
+        all: [
+          { field: "properties.arch", operator: "equals", value: "x64", caseSensitive: false },
+          { not: { field: "fileName", operator: "contains", value: "arm", caseSensitive: false } },
+        ],
+      },
+    },
+    {
+      group: "application",
+      value: "desktop",
+      when: {
+        field: "properties.app.platform",
+        operator: "equals",
+        value: "desktop",
+        caseSensitive: false,
+      },
+    },
+    {
+      group: "build-size",
+      value: "large",
+      when: {
+        field: "properties.build.number",
+        operator: "greaterThanOrEqual",
+        value: 40,
+        caseSensitive: false,
+      },
+    },
+    {
+      group: "freshness",
+      value: "recent",
+      when: {
+        field: "modifiedAt",
+        operator: "after",
+        value: "2026-01-01T00:00:00Z",
+        caseSensitive: false,
+      },
+    }
+  );
+  const service = new VersionService([source]);
+
+  const result = await service.paginate(
+    {
+      tags: [
+        { group: "operating-system", value: "windows" },
+        { group: "operating-system", value: "linux" },
+        { group: "architecture", value: "x64" },
+        { group: "build-size", value: "large" },
+        { group: "freshness", value: "recent" },
+      ],
+    },
+    1,
+    50
+  );
+
+  assert.deepEqual(result.items.map(item => item.id), ["windows-x64"]);
+  assert.deepEqual(result.items[0]?.tags, [
+    { group: "operating-system", value: "windows" },
+    { group: "architecture", value: "x64" },
+    { group: "application", value: "desktop" },
+    { group: "build-size", value: "large" },
+    { group: "freshness", value: "recent" },
+  ]);
+});
+
 test("version entries are reused between page requests", async () => {
   let loads = 0;
   const providers: VersionProviderSource[] = [
@@ -163,4 +257,40 @@ test("version entries are reused between page requests", async () => {
   await new VersionService(providers).paginate({}, 2, 50);
 
   assert.equal(loads, 1);
+});
+
+test("stale version entries are used when a cache refresh fails", async () => {
+  const originalNow = Date.now;
+  let now = 1_000;
+  let loads = 0;
+  const providers: VersionProviderSource[] = [
+    {
+      ...provider([entry("1.0.0", "stable", "1.0")]),
+      loadEntries: async () => {
+        loads += 1;
+
+        if (loads > 1) {
+          throw new Error("fetch failed");
+        }
+
+        return [entry("1.0.0", "stable", "1.0")];
+      },
+    },
+  ];
+
+  Date.now = () => now;
+
+  try {
+    const initial = await new VersionService(providers).paginate({}, 1, 50);
+    now += 30_001;
+    const stale = await new VersionService(providers).paginate({}, 1, 50);
+    const cachedStale = await new VersionService(providers).paginate({}, 1, 50);
+
+    assert.deepEqual(initial.items.map(item => item.id), ["1.0.0"]);
+    assert.deepEqual(stale.items.map(item => item.id), ["1.0.0"]);
+    assert.deepEqual(cachedStale.items.map(item => item.id), ["1.0.0"]);
+    assert.equal(loads, 2);
+  } finally {
+    Date.now = originalNow;
+  }
 });

@@ -39,6 +39,7 @@ function projectFixture() {
         label: "Releases",
       },
     ],
+    tagGroups: [],
   };
 }
 
@@ -121,6 +122,7 @@ test("versions.list serializes filters", async () => {
   await client.versions.list("example project", {
     branches: ["stable", "dev"],
     limit: 1,
+    tags: { architecture: ["x64"], "operating-system": ["windows", "linux"] },
     versions: ["1.6"],
   });
 
@@ -128,6 +130,10 @@ test("versions.list serializes filters", async () => {
   assert.equal(url.pathname, "/api/v1/projects/example%20project/versions");
   assert.equal(url.searchParams.get("branches"), "stable,dev");
   assert.equal(url.searchParams.get("versions"), "1.6");
+  assert.equal(
+    url.searchParams.get("tags"),
+    "architecture:x64,operating-system:windows,operating-system:linux"
+  );
   assert.equal(url.searchParams.get("limit"), "1");
 });
 
